@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.core.text.HtmlCompat;
 import android.text.style.ClickableSpan;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -29,6 +30,14 @@ public class Login extends AppCompatActivity {
 
         TextView GoBack = findViewById(R.id.GoBack);
         SpannableString spannableString = new SpannableString("Don't have an account? SignUp");
+        Button Login = findViewById(R.id.Login);
+        Login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Login.this,Home.class);
+                startActivity(intent);
+            }
+        });
 
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override

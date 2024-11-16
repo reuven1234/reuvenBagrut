@@ -7,6 +7,7 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -27,6 +28,7 @@ public class SignUp extends AppCompatActivity {
 
         TextView GoBack = findViewById(R.id.GoBack);
         SpannableString spannableString = new SpannableString("Already have an account? Login");
+        Button SignUp = findViewById(R.id.SignUp);
 
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
@@ -35,6 +37,14 @@ public class SignUp extends AppCompatActivity {
                 startActivity(intent);
             }
         };
+
+        SignUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SignUp.this,Home.class);
+                startActivity(intent);
+            }
+        });
 
         spannableString.setSpan(clickableSpan, 25, 30, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         GoBack.setText(spannableString);

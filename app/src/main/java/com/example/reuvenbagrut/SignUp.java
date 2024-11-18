@@ -8,9 +8,8 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import com.google.firebase.FirebaseApp;
+
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,12 +25,11 @@ public class SignUp extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sign_up);
 
-        EditText name = findViewById(R.id.Name);
-        EditText email = findViewById(R.id.Email);
-        EditText password = findViewById(R.id.Password);
+
         TextView GoBack = findViewById(R.id.GoBack);
         SpannableString spannableString = new SpannableString("Already have an account? Login");
         Button SignUp = findViewById(R.id.SignUp);
+
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(@NonNull View widget) {

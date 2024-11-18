@@ -83,10 +83,10 @@
 
     <Button
         android:id="@+id/SignUp"
-        android:layout_width="wrap_content"
+        android:layout_width="160dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="556dp"
-        android:backgroundTint="#151417"
+        android:backgroundTint="#424047"
         android:text="SignUp"
         android:textColor="#DCD8D7"
         android:textSize="20dp"

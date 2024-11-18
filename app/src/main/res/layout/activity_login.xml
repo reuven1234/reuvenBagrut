@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="112dp"
-        android:textSize="35dp"
+        android:textSize="38dp"
         android:textColor="#DCD8D7"
         android:text="Login"
         app:layout_constraintEnd_toEndOf="parent"
@@ -69,10 +69,10 @@
 
     <Button
         android:id="@+id/Login"
-        android:layout_width="wrap_content"
+        android:layout_width="160dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="508dp"
-        android:backgroundTint="#151417"
+        android:backgroundTint="#424047"
         android:text="Login"
         android:textColor="#DCD8D7"
         android:textSize="20dp"

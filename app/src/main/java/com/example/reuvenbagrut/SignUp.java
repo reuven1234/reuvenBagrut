@@ -61,6 +61,19 @@ public class SignUp extends AppCompatActivity {
                 if(TextUtils.isEmpty(email))
                 {
                     Toast.makeText(com.example.reuvenbagrut.SignUp.this,"Enter email",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if(TextUtils.isEmpty(password))
+                {
+                    Toast.makeText(com.example.reuvenbagrut.SignUp.this,"Enter password",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if(TextUtils.isEmpty(name))
+                {
+                    Toast.makeText(com.example.reuvenbagrut.SignUp.this,"Enter name",Toast.LENGTH_SHORT).show();
+                    return;
                 }
             }
         });

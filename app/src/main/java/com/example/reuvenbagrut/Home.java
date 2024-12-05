@@ -45,7 +45,7 @@ public class Home extends AppCompatActivity
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView
                 .setOnNavigationItemSelectedListener(this);
-        bottomNavigationView.setSelectedItemId(R.id.profile);
+        bottomNavigationView.setSelectedItemId(R.id.home);
 
 
 
@@ -82,14 +82,14 @@ public class Home extends AppCompatActivity
     @Override
     public boolean
     onNavigationItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.profile) {
+        if (item.getItemId() == R.id.home) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.flFragment, firstFragment)
                     .commit();
             return true;
 
-        } else if (item.getItemId() == R.id.home) {
+        } else if (item.getItemId() == R.id.profile) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.flFragment, secondFragment)

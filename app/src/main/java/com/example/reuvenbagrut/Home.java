@@ -77,7 +77,7 @@ public class Home extends AppCompatActivity
     public boolean
     onNavigationItemSelected(@NonNull MenuItem item)
     {
-
+4
         switch (item.getItemId()) {
             case R.id.person:
                 getSupportFragmentManager()

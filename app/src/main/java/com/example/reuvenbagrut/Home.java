@@ -45,12 +45,10 @@ public class Home extends AppCompatActivity
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView
                 .setOnNavigationItemSelectedListener(this);
-        bottomNavigationView.setSelectedItemId(R.id.profile);
+        bottomNavigationView.setSelectedItemId(R.id.person);
 
 
-
-            /*
-                    if(user == null)
+        if(user == null)
         {
             Intent intent = new Intent(Home.this,Login.class);
             startActivity(intent);
@@ -60,10 +58,6 @@ public class Home extends AppCompatActivity
         {
             logoutTxt.setText(user.getEmail());
         }
-             */
-
-
-
 
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,30 +75,32 @@ public class Home extends AppCompatActivity
 
     @Override
     public boolean
-    onNavigationItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.profile) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.flFragment, firstFragment)
-                    .commit();
-            return true;
+    onNavigationItemSelected(@NonNull MenuItem item)
+    {
+4
+        switch (item.getItemId()) {
+            case R.id.person:
+                getSupportFragmentManager()
+                        .beginTransaction()
+                            .replace(R.id.flFragment, firstFragment)
+                        .commit();
+                return true;
 
-        } else if (item.getItemId() == R.id.home) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.flFragment, secondFragment)
-                    .commit();
-            return true;
+            case R.id.home:
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.flFragment, secondFragment)
+                        .commit();
+                return true;
 
-        } else if (item.getItemId() == R.id.settings) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.flFragment, thirdFragment)
-                    .commit();
-            return true;
+            case R.id.settings:
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.flFragment, thirdFragment)
+                        .commit();
+                return true;
         }
-
         return false;
     }
 
-    }
+}

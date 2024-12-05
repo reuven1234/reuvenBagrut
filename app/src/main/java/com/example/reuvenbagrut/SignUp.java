@@ -32,6 +32,7 @@ public class SignUp extends AppCompatActivity {
     Button SignUp;
     EditText editTextName,editTextPassword,editTextEmail;
     FirebaseAuth mAuth;
+
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
@@ -47,6 +48,7 @@ public class SignUp extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sign_up);
+
         mAuth = FirebaseAuth.getInstance();
         SpannableString spannableString = new SpannableString("Already have an account? Login");
         editTextName= findViewById(R.id.Name);
@@ -63,14 +65,13 @@ public class SignUp extends AppCompatActivity {
                 startActivity(intent);
             }
         };
+        spannableString.setSpan(clickableSpan, 25, 30, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        GoBack.setText(spannableString);
+        GoBack.setMovementMethod(LinkMovementMethod.getInstance());
 
         SignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(SignUp.this,Home.class);
-                startActivity(intent);
-                finish();
-
                 String email,password,name;
                 email = editTextEmail.getText().toString();
                 password = editTextPassword.getText().toString();
@@ -101,19 +102,20 @@ public class SignUp extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(SignUp.this, "Account created.",
                                             Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(SignUp.this,Home.class);
+                                    startActivity(intent);
+                                    finish();
                                 } else {
                                     // If sign in fails, display a message to the user.
-                                    Toast.makeText(SignUp.this, "Authentication failed.",
-                                            Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(SignUp.this, "Sign-up failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+
                                 }
                             }
                         });
             }
         });
 
-        spannableString.setSpan(clickableSpan, 25, 30, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        GoBack.setText(spannableString);
-        GoBack.setMovementMethod(LinkMovementMethod.getInstance());
+
 
 
 

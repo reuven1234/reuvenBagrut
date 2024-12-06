@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="368dp"
         android:backgroundTint="#424047"
-        android:text="SignUp"
+        android:text="Sign Up"
         android:textColor="#DCD8D7"
         android:textSize="25dp"
         app:layout_constraintEnd_toEndOf="parent"

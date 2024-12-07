@@ -38,8 +38,6 @@ public class Home extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        logout = findViewById(R.id.LogOut);
-        logoutTxt = findViewById(R.id.LogOutTxt);
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
@@ -48,32 +46,15 @@ public class Home extends AppCompatActivity
         bottomNavigationView.setSelectedItemId(R.id.home);
 
 
-
-            /*
-                    if(user == null)
-        {
-            Intent intent = new Intent(Home.this,Login.class);
-            startActivity(intent);
-            finish();
-        }
-        else
-        {
-            logoutTxt.setText(user.getEmail());
-        }
-             */
-
-
-
-
-        logout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(Home.this,MainActivity.class);
+        /*
+        if(user == null)
+            {
+                Intent intent = new Intent(Home.this,Login.class);
                 startActivity(intent);
                 finish();
             }
-        });
+        */
+
     }
     Home_nav_Fragment firstFragment = new Home_nav_Fragment();
     Profile_nav_Fragment secondFragment = new Profile_nav_Fragment();

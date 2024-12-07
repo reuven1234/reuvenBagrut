@@ -7,10 +7,13 @@ import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.SpannableString;
 import androidx.annotation.NonNull;
+
+import android.text.method.PasswordTransformationMethod;
 import android.text.style.ClickableSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +31,8 @@ public class Login extends AppCompatActivity {
     Button Login;
     EditText editTextPassword, editTextEmail;
     FirebaseAuth mAuth;
+    private boolean isPasswordVisible = false;
+    ImageButton show;
 
     @Override
     public void onStart() {
@@ -51,6 +56,8 @@ public class Login extends AppCompatActivity {
         editTextPassword = findViewById(R.id.Password);
         editTextEmail = findViewById(R.id.Email);
         GoBack = findViewById(R.id.GoBack);  // Initialize inside onCreate
+        show = findViewById(R.id.toggleButton);
+
 
         // Create clickable span for "SignUp"
         SpannableString spannableString = new SpannableString("Don't have an account? SignUp");
@@ -104,5 +111,28 @@ public class Login extends AppCompatActivity {
                         });
             }
         });
+
+        show.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                togglePasswordVisibility();
+            }
+        });
+    }
+    private void togglePasswordVisibility() {
+        isPasswordVisible = !isPasswordVisible;
+
+        if (isPasswordVisible) {
+            // Show password
+            editTextPassword.setTransformationMethod(null);
+            show.setImageResource(R.drawable.ic_visibility_off);
+        } else {
+            // Hide password
+            editTextPassword.setTransformationMethod(new PasswordTransformationMethod());
+            show.setImageResource(R.drawable.ic_visibility);
+        }
+
+        // Maintain cursor position
+        editTextPassword.setSelection(editTextPassword.getText().length());
     }
 }

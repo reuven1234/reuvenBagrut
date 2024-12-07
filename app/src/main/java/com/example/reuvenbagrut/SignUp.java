@@ -2,14 +2,18 @@ package com.example.reuvenbagrut;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.text.style.ClickableSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +36,8 @@ public class SignUp extends AppCompatActivity {
     Button SignUp;
     EditText editTextName,editTextPassword,editTextEmail;
     FirebaseAuth mAuth;
+    ImageButton show;
+    private boolean isPasswordVisible = false;
 
     public void onStart() {
         super.onStart();
@@ -56,7 +62,7 @@ public class SignUp extends AppCompatActivity {
         editTextEmail= findViewById(R.id.Email);
         GoBack = findViewById(R.id.GoBack);
         SignUp = findViewById(R.id.SignUp);
-
+        show = findViewById(R.id.toggleButton);
 
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
@@ -76,6 +82,7 @@ public class SignUp extends AppCompatActivity {
                 email = editTextEmail.getText().toString();
                 password = editTextPassword.getText().toString();
                 name = editTextName.getText().toString();
+
 
                 if(TextUtils.isEmpty(email))
                 {
@@ -115,10 +122,29 @@ public class SignUp extends AppCompatActivity {
             }
         });
 
+        show.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                togglePasswordVisibility();
+            }
+        });
 
+    }
 
+    private void togglePasswordVisibility() {
+        isPasswordVisible = !isPasswordVisible;
 
+        if (isPasswordVisible) {
+            // Show password
+            editTextPassword.setTransformationMethod(null);
+            show.setImageResource(R.drawable.ic_visibility_off);
+        } else {
+            // Hide password
+            editTextPassword.setTransformationMethod(new PasswordTransformationMethod());
+            show.setImageResource(R.drawable.ic_visibility);
+        }
 
-
+        // Maintain cursor position
+        editTextPassword.setSelection(editTextPassword.getText().length());
     }
 }

@@ -105,7 +105,7 @@ public class Login extends AppCompatActivity {
                                     finish();
                                 } else {
                                     // Login failed, show error message
-                                    Toast.makeText(Login.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(Login.this, "Authentication failed." + task.getException().getMessage(), Toast.LENGTH_LONG).show();;
                                 }
                             }
                         });

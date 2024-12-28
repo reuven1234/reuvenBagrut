@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class Settings_nav_Fragment extends Fragment {
     Button logout;
     TextView logoutTxt;
+    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
     public Settings_nav_Fragment() {
         // Required empty public constructor
@@ -29,6 +30,13 @@ public class Settings_nav_Fragment extends Fragment {
 
         logout = view.findViewById(R.id.LogOut);
         logoutTxt = view.findViewById(R.id.LogOutTxt);
+
+        if(user != null)
+        {
+            String name = "";
+             name = user.getDisplayName();
+            logoutTxt.setText("Hello " + name);
+        }
 
         logout.setOnClickListener(new View.OnClickListener() {
             @Override

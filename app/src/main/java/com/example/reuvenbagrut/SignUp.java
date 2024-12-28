@@ -30,6 +30,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 public class SignUp extends AppCompatActivity {
     TextView GoBack;
@@ -107,15 +108,31 @@ public class SignUp extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(SignUp.this, "Account created.",
-                                            Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(SignUp.this,Home.class);
-                                    startActivity(intent);
-                                    finish();
-                                } else {
-                                    // If sign in fails, display a message to the user.
-                                    Toast.makeText(SignUp.this, "Sign-up failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                    FirebaseUser user = mAuth.getCurrentUser();
 
+                                    if (user != null) {
+                                        // Update the user's profile with the name
+                                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                                .setDisplayName(name)
+                                                .build();
+
+                                        user.updateProfile(profileUpdates)
+                                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if (task.isSuccessful()) {
+                                                            Toast.makeText(SignUp.this, "Account created.", Toast.LENGTH_SHORT).show();
+                                                            Intent intent = new Intent(SignUp.this, Home.class);
+                                                            startActivity(intent);
+                                                            finish();
+                                                        } else {
+                                                            Toast.makeText(SignUp.this, "Failed to save name: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                                        }
+                                                    }
+                                                });
+                                    }
+                                } else {
+                                    Toast.makeText(SignUp.this, "Sign-up failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             }
                         });

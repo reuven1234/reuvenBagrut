@@ -23,6 +23,7 @@
         android:layout_height="75dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:background="#353232"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_nav_menu"/>

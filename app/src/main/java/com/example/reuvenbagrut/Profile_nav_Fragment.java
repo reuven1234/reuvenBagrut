@@ -19,7 +19,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class Profile_nav_Fragment extends Fragment {
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-    TextView hiTxt;
+    TextView username;
 
     public Profile_nav_Fragment() {
         // Required empty public constructor
@@ -30,7 +30,7 @@ public class Profile_nav_Fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile_nav_, container, false);
-        hiTxt = view.findViewById(R.id.helloTxt);
+        username = view.findViewById(R.id.username);
         settings = view.findViewById(R.id.settings);
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,7 +46,7 @@ public class Profile_nav_Fragment extends Fragment {
         {
             String name = "";
             name = user.getDisplayName();
-            hiTxt.setText("Hello " + name);
+            username.setText(name);
         }
 
         return view;

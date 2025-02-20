@@ -52,7 +52,7 @@ public class Profile_nav_Fragment extends Fragment {
         if(user != null)
         {
             String name = "";
-            name = user.getDisplayName();
+            name = user.getDisplayName()+"";
             hiTxt.setText("Hello " + name);
         }
 

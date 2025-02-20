@@ -3,6 +3,8 @@
     <style name="Base.Theme.ReuvenBagrut" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowBackground">#1F1D1D</item> <!-- White background -->
+
     </style>
 
     <style name="Theme.ReuvenBagrut" parent="Base.Theme.ReuvenBagrut" />

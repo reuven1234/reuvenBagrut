@@ -38,6 +38,7 @@ public class SignUp extends AppCompatActivity {
     EditText editTextName,editTextPassword,editTextEmail;
     FirebaseAuth mAuth;
     ImageButton show;
+    private UserRepository repository;
     private boolean isPasswordVisible = false;
 
     public void onStart() {
@@ -64,6 +65,7 @@ public class SignUp extends AppCompatActivity {
         GoBack = findViewById(R.id.GoBack);
         SignUp = findViewById(R.id.SignUp);
         show = findViewById(R.id.toggleButton);
+        repository = new UserRepository();
 
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
@@ -103,39 +105,24 @@ public class SignUp extends AppCompatActivity {
                     return;
                 }
 
-                mAuth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    FirebaseUser user = mAuth.getCurrentUser();
+                User user = new User();
+                user.setName(name);
+                user.setPassword(password);
+                user.setEmail(email);
 
-                                    if (user != null) {
-                                        // Update the user's profile with the name
-                                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                                .setDisplayName(name)
-                                                .build();
+                repository.addUser(user, new FirebaseCallback<User>() {
+                    @Override
+                    public void onSuccess(User user) {
+                        Intent i = new Intent(SignUp.this, Home.class);
+                        startActivity(i);
+                    }
 
-                                        user.updateProfile(profileUpdates)
-                                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                    @Override
-                                                    public void onComplete(@NonNull Task<Void> task) {
-                                                        if (task.isSuccessful()) {
-                                                            Toast.makeText(SignUp.this, "Account created.", Toast.LENGTH_SHORT).show();
-                                                            Intent intent = new Intent(SignUp.this, Home.class);
-                                                            startActivity(intent);
-                                                            finish();
-                                                        } else {
-                                                            Toast.makeText(SignUp.this, "Failed to save name: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                                                        }
-                                                    }
-                                                });
-                                    }
-                                } else {
-                                    Toast.makeText(SignUp.this, "Sign-up failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        });
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(SignUp.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
             }
         });
 

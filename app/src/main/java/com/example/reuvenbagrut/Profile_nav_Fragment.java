@@ -30,7 +30,6 @@ public class Profile_nav_Fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile_nav_, container, false);
-        hiTxt = view.findViewById(R.id.helloTxt);
         settings = view.findViewById(R.id.settings);
         settings.setOnClickListener(new View.OnClickListener() {
             @Override

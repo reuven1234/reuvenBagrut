@@ -33,6 +33,7 @@ public class Login extends AppCompatActivity {
     FirebaseAuth mAuth;
     private boolean isPasswordVisible = false;
     ImageButton show;
+    UserRepository repo;
 
     @Override
     public void onStart() {
@@ -57,7 +58,7 @@ public class Login extends AppCompatActivity {
         editTextEmail = findViewById(R.id.Email);
         GoBack = findViewById(R.id.GoBack);  // Initialize inside onCreate
         show = findViewById(R.id.toggleButton);
-
+        repo = new UserRepository();
 
         // Create clickable span for "SignUp"
         SpannableString spannableString = new SpannableString("Don't have an account? SignUp");
@@ -92,23 +93,22 @@ public class Login extends AppCompatActivity {
                     return;
                 }
 
-                // Authenticate user
-                mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    // Login successful, navigate to Home activity
-                                    Toast.makeText(Login.this, "Login successful.", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(Login.this, Home.class);
-                                    startActivity(intent);
-                                    finish();
-                                } else {
-                                    // Login failed, show error message
-                                    Toast.makeText(Login.this, "Authentication failed." + task.getException().getMessage(), Toast.LENGTH_LONG).show();;
-                                }
-                            }
-                        });
+                User u = new User();
+                u.setEmail(email);
+                u.setPassword(password);
+                repo.getUser(u, new FirebaseCallback<User>() {
+                    @Override
+                    public void onSuccess(User user) {
+                        Intent i = new Intent(Login.this, Home.class);
+                        startActivity(i);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(Login.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
             }
         });
 

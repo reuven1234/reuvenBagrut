@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "297374221178",
-    "project_id": "reuvenbagrut",
-    "storage_bucket": "reuvenbagrut.firebasestorage.app"
+    "project_number": "854828069200",
+    "project_id": "reuvenbagrut-31892",
+    "storage_bucket": "reuvenbagrut-31892.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:297374221178:android:2707e16380e13ee2a3ccc3",
+        "mobilesdk_app_id": "1:854828069200:android:428110e5145f8a4296bc55",
         "android_client_info": {
           "package_name": "com.example.reuvenbagrut"
         }

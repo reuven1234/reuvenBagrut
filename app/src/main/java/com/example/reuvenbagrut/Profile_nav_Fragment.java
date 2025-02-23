@@ -34,6 +34,7 @@ public class Profile_nav_Fragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile_nav_, container, false);
         settings = view.findViewById(R.id.settings);
         editProfileBtn = view.findViewById(R.id.editProfileBtn);
+        hiTxt = view.findViewById(R.id.username);
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -53,7 +54,7 @@ public class Profile_nav_Fragment extends Fragment {
         {
             String name = "";
             name = user.getDisplayName()+"";
-            hiTxt.setText("Hello " + name);
+            hiTxt.setText(name);
         }
 
         return view;

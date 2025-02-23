@@ -26,13 +26,10 @@ public class UserRepository {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             FirebaseUser firebaseUser = auth.getCurrentUser();
-
                             if (firebaseUser != null) {
-                                // Update the user's profile with the name
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                                         .setDisplayName(user.getName())
                                         .build();
-
                                 firebaseUser.updateProfile(profileUpdates)
                                         .addOnCompleteListener(task1 -> {
                                             if (task1.isSuccessful()) {

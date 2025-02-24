@@ -10,6 +10,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UserRepository {
     private FirebaseAuth auth;
     private FirebaseFirestore firestore;
@@ -27,17 +30,31 @@ public class UserRepository {
                         if (task.isSuccessful()) {
                             FirebaseUser firebaseUser = auth.getCurrentUser();
                             if (firebaseUser != null) {
+                                String userId = firebaseUser.getUid();
+
+                                // ✅ Update Firebase Auth Profile (Display Name)
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                                         .setDisplayName(user.getName())
                                         .build();
-                                firebaseUser.updateProfile(profileUpdates)
-                                        .addOnCompleteListener(task1 -> {
-                                            if (task1.isSuccessful()) {
-                                                callback.onSuccess(user);
-                                            } else {
-                                                callback.onError(task1.getException().getMessage());
-                                            }
-                                        });
+
+                                firebaseUser.updateProfile(profileUpdates).addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        // ✅ Save User Data in Firestore
+                                        Map<String, Object> userData = new HashMap<>();
+                                        userData.put("name", user.getName());
+                                        userData.put("email", user.getEmail());
+                                        userData.put("profilePicture", ""); // Default empty profile picture
+                                        userData.put("bio", ""); // Default empty bio
+
+                                        firestore.collection("users").document(userId)
+                                                .set(userData)
+                                                .addOnSuccessListener(aVoid -> callback.onSuccess(user))
+                                                .addOnFailureListener(e -> callback.onError("Failed to save user in Firestore: " + e.getMessage()));
+                                    } else {
+                                        callback.onError("Failed to update profile: " + task1.getException().getMessage());
+                                    }
+                                });
+
                             }
                         } else {
                             callback.onError(task.getException().getMessage());
@@ -45,6 +62,7 @@ public class UserRepository {
                     }
                 });
     }
+
 
     public void getUser(User user, FirebaseCallback<User> callback) {
         auth.signInWithEmailAndPassword(user.getEmail(), user.getPassword())

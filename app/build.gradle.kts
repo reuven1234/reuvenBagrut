@@ -48,11 +48,32 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore:25.1.2")
+    implementation ("com.google.firebase:firebase-auth:21.2.0")
     implementation ("com.github.bumptech.glide:glide:4.15.1")
     implementation ("de.hdodenhof:circleimageview:3.1.0")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
+
+    implementation ("com.google.firebase:firebase-bom:32.1.1")
+    implementation ("com.google.firebase:firebase-auth")
+    implementation ("com.google.firebase:firebase-firestore")
+    implementation ("com.google.firebase:firebase-storage")
+    implementation ("com.google.firebase:firebase-messaging")
+
+    // UI & Image Handling
+    implementation ("com.squareup.picasso:picasso:2.8")
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    implementation ("com.google.android.material:material:1.6.1'")
+
+    // RecyclerView & Navigation
+    implementation ("androidx.recyclerview:recyclerview:1.2.1")
+    implementation ("androidx.navigation:navigation-fragment:2.4.1")
+    implementation ("androidx.navigation:navigation-ui:2.4.1")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

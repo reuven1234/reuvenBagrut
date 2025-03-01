@@ -1,51 +1,88 @@
 package com.example.reuvenbagrut;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import android.content.Intent;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.android.material.imageview.ShapeableImageView;
 
 public class Profile_nav_Fragment extends Fragment {
 
     private FirebaseUser user;
     private TextView hiTxt, bioTxt;
-    private ShapeableImageView profileImageView;
+    private de.hdodenhof.circleimageview.CircleImageView profileImageView;
     private Button editProfileBtn;
     private ImageButton settings;
+
+    // TabLayout and ViewPager2 for switching between recipe sections
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager;
 
     public Profile_nav_Fragment() {
         // Required empty public constructor
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             android.os.Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile_nav_, container, false);
+
+        // Bind header views
         settings = view.findViewById(R.id.settings);
         editProfileBtn = view.findViewById(R.id.editProfileBtn);
         hiTxt = view.findViewById(R.id.username);
         bioTxt = view.findViewById(R.id.bio);
         profileImageView = view.findViewById(R.id.profileImage);
+
+        // Bind TabLayout and ViewPager2
+        tabLayout = view.findViewById(R.id.tabs);
+        viewPager = view.findViewById(R.id.viewPager);
+
         user = FirebaseAuth.getInstance().getCurrentUser();
 
+        // Set up the ViewPager with the adapter that returns two fragments.
+        ProfileTabsAdapter adapter = new ProfileTabsAdapter(this);
+        viewPager.setAdapter(adapter);
+
+        // Attach the TabLayout with ViewPager2
+        tabLayout.addTab(tabLayout.newTab().setText("Uploaded"));
+        tabLayout.addTab(tabLayout.newTab().setText("Liked"));
+
+        // Sync TabLayout selection with ViewPager page changes
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                if (tabLayout.getSelectedTabPosition() != position) {
+                    tabLayout.selectTab(tabLayout.getTabAt(position));
+                }
+            }
+        });
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+            @Override public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
+        // Set click listeners
         settings.setOnClickListener(v -> {
             Settings_nav_Fragment fragment1 = new Settings_nav_Fragment();
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -67,9 +104,6 @@ public class Profile_nav_Fragment extends Fragment {
         super.onResume();
         refreshUserData();
     }
-
-
-// ...
 
     private void refreshUserData() {
         if (user != null) {
@@ -98,5 +132,4 @@ public class Profile_nav_Fragment extends Fragment {
                     });
         }
     }
-
 }

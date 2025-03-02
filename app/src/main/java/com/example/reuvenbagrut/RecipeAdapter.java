@@ -10,11 +10,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
 
     private List<Recipe> recipeList;
+    public RecipeAdapter(List<Recipe> recipeList) {
+        this.recipeList = recipeList;
+    }
+
+    public RecipeAdapter() {
+        this.recipeList = new ArrayList<>();
+    }
+
 
     public void setRecipeList(List<Recipe> recipeList) {
         this.recipeList = recipeList;

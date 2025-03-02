@@ -1,6 +1,7 @@
 package com.example.reuvenbagrut;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -42,19 +44,27 @@ public class LikedRecipesFragment extends Fragment {
     }
 
     private void loadLikedRecipes() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Log.e("LikedRecipesFragment", "No user is logged in.");
+            // Optionally, redirect to a login screen or show a message
+            return;
+        }
         FirebaseFirestore.getInstance().collection("recipes")
-                .whereArrayContains("likes", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .whereArrayContains("likes", currentUser.getUid())
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     recipeList.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
                         Recipe recipe = doc.toObject(Recipe.class);
                         if (recipe != null) {
-                            recipe.setId(doc.getId());
+                            recipe.setIdMeal(doc.getId());
                             recipeList.add(recipe);
                         }
                     }
                     adapter.notifyDataSetChanged();
-                });
+                })
+                .addOnFailureListener(e -> Log.e("LikedRecipesFragment", "Error loading liked recipes", e));
     }
+
 }

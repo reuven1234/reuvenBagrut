@@ -1,6 +1,7 @@
 package com.example.reuvenbagrut;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -42,19 +44,28 @@ public class UploadedRecipesFragment extends Fragment {
     }
 
     private void loadUploadedRecipes() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Log.e("UploadedRecipesFragment", "No user logged in");
+            // Optionally, redirect to a login screen or display an error message
+            return;
+        }
+
         FirebaseFirestore.getInstance().collection("recipes")
-                .whereEqualTo("authorId", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .whereEqualTo("authorId", currentUser.getUid())
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     recipeList.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
                         Recipe recipe = doc.toObject(Recipe.class);
                         if (recipe != null) {
-                            recipe.setId(doc.getId());
+                            recipe.setIdMeal(doc.getId());
                             recipeList.add(recipe);
                         }
                     }
                     adapter.notifyDataSetChanged();
-                });
+                })
+                .addOnFailureListener(e -> Log.e("UploadedRecipesFragment", "Error loading recipes", e));
     }
+
 }

@@ -30,12 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import android.util.Log;
+import com.google.firebase.storage.StorageException;
+import com.google.firebase.storage.UploadTask;
 
 public class AddRecipeFragment extends Fragment {
     private static final String TAG = "AddRecipeFragment";
     private static final int PICK_IMAGE_REQUEST = 1;
-    private static final int MAX_IMAGE_DIMENSION = 1024;
-    private static final int JPEG_QUALITY = 85;
+    private static final int MAX_IMAGE_DIMENSION = 800;
+    private static final int JPEG_QUALITY = 50;
     
     // State
     private boolean isImageChanged = false;
@@ -240,30 +242,42 @@ public class AddRecipeFragment extends Fragment {
             recipe.setStrAuthorImage(currentUser.getPhotoUrl().toString());
         }
 
+        // Convert image to Base64 if present
         if (isImageChanged && selectedImageBitmap != null) {
-            uploadImageAndSaveRecipe(recipe);
+            try {
+                String base64Image = convertBitmapToBase64(selectedImageBitmap);
+                recipe.setStrMealThumb(base64Image);
+                saveRecipe(recipe);
+            } catch (Exception e) {
+                Log.e(TAG, "Error converting image", e);
+                handleError(e, R.string.error_uploading_image);
+            }
         } else {
             saveRecipe(recipe);
         }
     }
 
-    private void uploadImageAndSaveRecipe(final Recipe recipe) {
-        String imageFileName = "recipes/" + UUID.randomUUID().toString() + ".jpg";
-        StorageReference imageRef = storageRef.child(imageFileName);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        selectedImageBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, baos);
-        byte[] imageData = baos.toByteArray();
-
-        imageRef.putBytes(imageData)
-                .addOnSuccessListener(taskSnapshot -> 
-                    imageRef.getDownloadUrl()
-                            .addOnSuccessListener(uri -> {
-                                recipe.setStrMealThumb(uri.toString());
-                                saveRecipe(recipe);
-                            })
-                            .addOnFailureListener(e -> handleError(e, R.string.error_getting_image_url)))
-                .addOnFailureListener(e -> handleError(e, R.string.error_uploading_image));
+    private String convertBitmapToBase64(Bitmap bitmap) {
+        try {
+            // Compress bitmap to reduce size
+            Bitmap compressedBitmap = compressImage(bitmap);
+            
+            // Convert to bytes
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            compressedBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, baos);
+            byte[] imageBytes = baos.toByteArray();
+            
+            // Convert to Base64
+            String base64Image = android.util.Base64.encodeToString(imageBytes, android.util.Base64.DEFAULT);
+            
+            // Log the size for debugging
+            Log.d(TAG, "Base64 image size: " + base64Image.length() + " bytes");
+            
+            return "data:image/jpeg;base64," + base64Image;
+        } catch (Exception e) {
+            Log.e(TAG, "Error converting image to base64", e);
+            throw e;
+        }
     }
 
     private void saveRecipe(Recipe recipe) {

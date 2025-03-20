@@ -6,46 +6,34 @@ import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.SpannableString;
-import androidx.annotation.NonNull;
-
-import android.text.method.PasswordTransformationMethod;
 import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.util.Patterns;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class Login extends AppCompatActivity {
-
-    TextView GoBack;
-    Button Login;
-    EditText editTextPassword, editTextEmail;
-    FirebaseAuth mAuth;
-    private boolean isPasswordVisible = false;
-    ImageButton show;
-    UserRepository repo;
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            Intent intent = new Intent(Login.this, Home.class);
-            startActivity(intent);
-            finish();
-        }
-    }
+    private static final String TAG = "LoginActivity";
+    
+    private TextView goBack;
+    private MaterialButton loginButton;
+    private TextInputEditText editTextPassword, editTextEmail;
+    private TextInputLayout passwordLayout, emailLayout;
+    private FirebaseAuth mAuth;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,86 +41,130 @@ public class Login extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
+        initializeViews();
+        setupClickableSpan();
+        setupClickListeners();
+    }
+
+    private void initializeViews() {
         mAuth = FirebaseAuth.getInstance();
+        
+        emailLayout = findViewById(R.id.emailInputLayout);
+        passwordLayout = findViewById(R.id.passwordInputLayout);
         editTextPassword = findViewById(R.id.Password);
         editTextEmail = findViewById(R.id.Email);
-        GoBack = findViewById(R.id.GoBack);  // Initialize inside onCreate
-        show = findViewById(R.id.toggleButton);
-        repo = new UserRepository();
+        goBack = findViewById(R.id.GoBack);
+        loginButton = findViewById(R.id.Login);
+        progressBar = findViewById(R.id.progressBar);
 
-        // Create clickable span for "SignUp"
-        SpannableString spannableString = new SpannableString("Don't have an account? SignUp");
+        // Apply styles
+        loginButton.setBackgroundTintList(getColorStateList(R.color.primary_color));
+    }
+
+    private void setupClickableSpan() {
+        SpannableString spannableString = new SpannableString(getString(R.string.dont_have_account));
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(@NonNull View widget) {
-                Intent intent = new Intent(Login.this, SignUp.class);
-                startActivity(intent);
+                startActivity(new Intent(Login.this, SignUp.class));
             }
         };
 
-        spannableString.setSpan(clickableSpan, 23, 29, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        GoBack.setText(spannableString);
-        GoBack.setMovementMethod(LinkMovementMethod.getInstance());
-
-        // Set Login button click listener
-        Login = findViewById(R.id.Login);
-        Login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = editTextEmail.getText().toString();
-                String password = editTextPassword.getText().toString();
-
-                // Validate email and password fields
-                if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(Login.this, "Enter email", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(Login.this, "Enter password", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                User u = new User();
-                u.setEmail(email);
-                u.setPassword(password);
-                repo.getUser(u, new FirebaseCallback<User>() {
-                    @Override
-                    public void onSuccess(User user) {
-                        Intent i = new Intent(Login.this, Home.class);
-                        startActivity(i);
-                    }
-
-                    @Override
-                    public void onError(String message) {
-                        Toast.makeText(Login.this, message, Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-            }
-        });
-
-        show.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                togglePasswordVisibility();
-            }
-        });
+        int startIndex = spannableString.toString().indexOf("Sign Up");
+        int endIndex = startIndex + "Sign Up".length();
+        
+        spannableString.setSpan(clickableSpan, startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(
+            new ForegroundColorSpan(ContextCompat.getColor(this, R.color.primary_color)),
+            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+        
+        goBack.setText(spannableString);
+        goBack.setMovementMethod(LinkMovementMethod.getInstance());
     }
-    private void togglePasswordVisibility() {
-        isPasswordVisible = !isPasswordVisible;
 
-        if (isPasswordVisible) {
-            // Show password
-            editTextPassword.setTransformationMethod(null);
-            show.setImageResource(R.drawable.ic_visibility_off);
-        } else {
-            // Hide password
-            editTextPassword.setTransformationMethod(new PasswordTransformationMethod());
-            show.setImageResource(R.drawable.ic_visibility);
+    private void setupClickListeners() {
+        loginButton.setOnClickListener(v -> performLogin());
+    }
+
+    private void performLogin() {
+        String email = editTextEmail.getText().toString().trim();
+        String password = editTextPassword.getText().toString().trim();
+
+        if (!validateInputs(email, password)) {
+            return;
         }
 
-        // Maintain cursor position
-        editTextPassword.setSelection(editTextPassword.getText().length());
+        showLoading(true);
+        
+        mAuth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this, task -> {
+                if (task.isSuccessful()) {
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    if (user != null) {
+                        navigateToHome();
+                    }
+                } else {
+                    String errorMessage = task.getException() != null ? 
+                        task.getException().getMessage() : 
+                        getString(R.string.auth_failed);
+                    showError(errorMessage);
+                }
+                showLoading(false);
+            });
+    }
+
+    private boolean validateInputs(String email, String password) {
+        boolean isValid = true;
+
+        emailLayout.setError(null);
+        passwordLayout.setError(null);
+
+        if (TextUtils.isEmpty(email)) {
+            emailLayout.setError(getString(R.string.email_required));
+            isValid = false;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailLayout.setError(getString(R.string.invalid_email));
+            isValid = false;
+        }
+
+        if (TextUtils.isEmpty(password)) {
+            passwordLayout.setError(getString(R.string.password_required));
+            isValid = false;
+        } else if (password.length() < 6) {
+            passwordLayout.setError(getString(R.string.password_min_length));
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    private void showLoading(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        loginButton.setEnabled(!show);
+        editTextEmail.setEnabled(!show);
+        editTextPassword.setEnabled(!show);
+        emailLayout.setEnabled(!show);
+        passwordLayout.setEnabled(!show);
+    }
+
+    private void showError(String message) {
+        Toast.makeText(Login.this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void navigateToHome() {
+        Intent intent = new Intent(Login.this, Home.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            navigateToHome();
+        }
     }
 }

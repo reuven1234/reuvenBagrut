@@ -1,11 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.ReuvenBagrut" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-        <item name="android:windowBackground">#1F1D1D</item> <!-- White background -->
+    <!-- Base application theme -->
+    <style name="Base.Theme.FoodPal" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Colors -->
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorSecondary">@color/secondary_color</item>
+        <item name="colorSecondaryVariant">@color/secondary_variant</item>
+        <item name="android:colorBackground">@color/background_color</item>
+        <item name="colorSurface">@color/surface_color</item>
+        <item name="colorError">@color/error_color</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnError">@color/white</item>
 
+        <!-- System bars -->
+        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:navigationBarColor">@color/navigation_bar</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+
+        <!-- Text appearances -->
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.FoodPal.Headline1</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.FoodPal.Headline2</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.FoodPal.Body1</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.FoodPal.Body2</item>
+
+        <!-- Widget styles -->
+        <item name="materialButtonStyle">@style/Widget.FoodPal.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.FoodPal.Button.TextButton</item>
+        <item name="textInputStyle">@style/Widget.FoodPal.TextInputLayout</item>
+        <item name="materialCardViewStyle">@style/Widget.FoodPal.CardView</item>
+        <item name="bottomNavigationStyle">@style/Widget.FoodPal.BottomNavigation</item>
+        <item name="circularProgressIndicatorStyle">@style/Widget.FoodPal.ProgressBar</item>
+
+        <!-- Window configurations -->
+        <item name="android:windowBackground">@color/background_color</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
     </style>
 
-    <style name="Theme.ReuvenBagrut" parent="Base.Theme.ReuvenBagrut" />
+    <!-- Main theme -->
+    <style name="Theme.FoodPal" parent="Base.Theme.FoodPal"/>
+
+    <!-- Splash Screen theme -->
+    <style name="Theme.FoodPal.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/background_color</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.FoodPal</item>
+    </style>
+
+    <!-- Dialog theme -->
+    <style name="Theme.FoodPal.Dialog" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorSecondary">@color/secondary_color</item>
+        <item name="android:background">@color/surface_color</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.FoodPal.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.FoodPal.Button.TextButton</item>
+    </style>
+
+    <!-- Bottom sheet theme -->
+    <style name="Theme.FoodPal.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet</item>
+        <item name="android:background">@color/surface_color</item>
+    </style>
 </resources>

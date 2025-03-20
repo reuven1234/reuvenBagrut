@@ -1,5 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReuvenBagrut</string>
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="app_name">FoodPal</string>
+    
+    <!-- Auth -->
+    <string name="welcome_message">Welcome to FoodPal</string>
+    <string name="welcome_subtitle">Discover, create, and share delicious recipes with food lovers around the world</string>
+    <string name="app_logo">FoodPal app logo</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="skip_for_now">Skip for now</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password (min. 6 characters)</string>
+    <string name="name_hint">Full Name</string>
+    <string name="login_title">Welcome Back</string>
+    <string name="signup_title">Create Account</string>
+    <string name="dont_have_account">Don\'t have an account? Sign Up</string>
+    <string name="already_have_account">Already have an account? Login</string>
+    <string name="email_required">Email is required</string>
+    <string name="password_required">Password is required</string>
+    <string name="name_required">Name is required</string>
+    <string name="invalid_email">Please enter a valid email address</string>
+    <string name="password_min_length">Password must be at least 6 characters</string>
+    <string name="auth_failed">Authentication failed</string>
+    
+    <!-- Home Fragment -->
+    <string name="discover_recipes">Discover Recipes</string>
+    <string name="find_favorite_recipes">Find your favorite recipes</string>
+    <string name="search_recipes_hint">Search recipes…</string>
+    <string name="popular_recipes">Popular Recipes</string>
+    <string name="no_recipes_found">No recipes found</string>
+    <string name="no_recipes_available">No recipes available</string>
+    <string name="recipe_id_not_available">Recipe ID not available</string>
+    <string name="no_uploaded_recipes">You haven\'t uploaded any recipes yet</string>
+    
+    <!-- Add Recipe Fragment -->
+    <string name="add_new_recipe">Add New Recipe</string>
+    <string name="recipe_name_hint">Recipe Name</string>
+    <string name="ingredients_hint">Ingredients (one per line)</string>
+    <string name="instructions_hint">Instructions</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="add_recipe">Add Recipe</string>
+    
+    <!-- Recipe Detail -->
+    <string name="ingredients">Ingredients</string>
+    <string name="instructions">Instructions</string>
+    <string name="comments">Comments</string>
+    <string name="add_comment_hint">Add a comment…</string>
+    <string name="favorite_recipe">Add to favorites</string>
+    <string name="share_recipe">Share recipe</string>
+    <string name="edit_recipe">Edit recipe</string>
+    <string name="delete_recipe">Delete recipe</string>
+    
+    <!-- Comments -->
+    <string name="user_profile_image">User profile image</string>
+    <string name="like">Like</string>
+    <string name="reply">Reply</string>
+    <string name="comment_time_format">%1$s ago</string>
+    <string name="post_comment">Post Comment</string>
+    
+    <!-- Images -->
+    <string name="recipe_image_description">Recipe image</string>
+    <string name="recipe_photo_description">Recipe photo preview</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_add">Add Recipe</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_settings">Settings</string>
+    <string name="search_recipes">Search recipes</string>
+    
+    <!-- Profile Tabs -->
+    <string name="tab_uploaded">My Recipes</string>
+    <string name="tab_liked">Favorites</string>
+    
+    <!-- Common -->
+    <string name="error_generic">Something went wrong</string>
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_try_again">Please try again</string>
+    <string name="coming_soon">Coming soon</string>
+    
+    <!-- Error Messages -->
+    <string name="error_loading_recipes">Error loading recipes. Please try again.</string>
+    <string name="error_not_authenticated">Please login to add recipes</string>
+    <string name="error_fill_all_fields">Please fill in all fields</string>
+    <string name="error_loading_image">Error loading image</string>
+    <string name="error_getting_image_url">Error getting image URL</string>
+    <string name="error_uploading_image">Error uploading image</string>
+    <string name="error_adding_recipe">Error adding recipe</string>
+    <string name="error_loading_profile">Error loading profile</string>
+    <string name="error_switching_fragments">Error switching fragments</string>
+    <string name="error_navigation_not_found">Navigation view not found</string>
+    <string name="error_setting_default_fragment">Error setting default fragment</string>
+    
+    <!-- Success Messages -->
+    <string name="recipe_added_success">Recipe added successfully</string>
+    <string name="logout_success">Successfully logged out</string>
+    
+    <!-- Profile -->
+    <string name="anonymous">Anonymous</string>
+    <string name="hello_user_format">Hello, %1$s</string>
+    <string name="hello_guest">Hello, Guest</string>
+    <string name="app_version_format">Version %1$s</string>
+    <string name="logout_error">Error logging out</string>
+    <string name="edit_profile">Edit Profile</string>
+    
+    <!-- Actions -->
+    <string name="select_picture">Select Picture</string>
+    <string name="change_photo">Change Photo</string>
+    
+    <!-- Empty States -->
+    <string name="no_liked_recipes">You haven\'t liked any recipes yet</string>
+    
+    <!-- Legacy (To be removed) -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    
+    <!-- Recipe strings -->
+    <string name="recipe_image">Recipe Image</string>
+    <string name="author_image">Author Image</string>
+    <string name="retry">Retry</string>
 </resources>

@@ -30,11 +30,6 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
     private FirebaseUser user;
     private int selectedItemId = R.id.nav_home;
 
-    private final HomeFragment homeFragment = new HomeFragment();
-    private final ProfileFragment profileFragment = new ProfileFragment();
-    private final SettingsFragment settingsFragment = new SettingsFragment();
-    private final AddRecipeFragment addRecipeFragment = new AddRecipeFragment();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,19 +91,19 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
         String title = getString(R.string.app_name);
 
         if (itemId == R.id.nav_home) {
-            selectedFragment = homeFragment;
+            selectedFragment = new HomeFragment();
             tag = "home";
             title = getString(R.string.nav_home);
         } else if (itemId == R.id.nav_add) {
-            selectedFragment = addRecipeFragment;
+            selectedFragment = new AddRecipeFragment();
             tag = "add";
             title = getString(R.string.nav_add);
         } else if (itemId == R.id.nav_profile) {
-            selectedFragment = profileFragment;
+            selectedFragment = new ProfileFragment();
             tag = "profile";
             title = getString(R.string.nav_profile);
         } else if (itemId == R.id.nav_settings) {
-            selectedFragment = settingsFragment;
+            selectedFragment = new SettingsFragment();
             tag = "settings";
             title = getString(R.string.nav_settings);
         }

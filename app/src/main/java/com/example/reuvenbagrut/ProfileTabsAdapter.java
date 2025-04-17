@@ -30,8 +30,8 @@ public class ProfileTabsAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        Bundle args = new Bundle();
         Fragment fragment;
+        Bundle args = new Bundle();
         
         switch (position) {
             case UPLOADED_POSITION:
@@ -77,15 +77,11 @@ public class ProfileTabsAdapter extends FragmentStateAdapter {
 
     @Override
     public long getItemId(int position) {
-        // Use stable IDs based on fragment type
-        return position == UPLOADED_POSITION ? 
-            UploadedRecipesFragment.class.hashCode() : 
-            LikedRecipesFragment.class.hashCode();
+        return (long) position;
     }
 
     @Override
     public boolean containsItem(long itemId) {
-        return itemId == UploadedRecipesFragment.class.hashCode() || 
-               itemId == LikedRecipesFragment.class.hashCode();
+        return itemId >= 0 && itemId < NUM_TABS;
     }
 }

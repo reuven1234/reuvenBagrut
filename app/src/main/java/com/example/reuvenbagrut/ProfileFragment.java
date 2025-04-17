@@ -102,8 +102,6 @@ public class ProfileFragment extends Fragment {
         initializeViews(view);
         setupViewPager();
         setupClickListeners();
-        refreshUserData();
-        fetchUserStats();
     }
 
     private void initializeViews(View view) {
@@ -142,15 +140,17 @@ public class ProfileFragment extends Fragment {
         try {
             // Create adapter if not exists
             if (tabsAdapter == null) {
-                tabsAdapter = new ProfileTabsAdapter(requireActivity());
+                tabsAdapter = new ProfileTabsAdapter(this);
             }
 
             // Configure ViewPager2
-            viewPager.setOffscreenPageLimit(2);
+            viewPager.setOffscreenPageLimit(1);
             viewPager.setUserInputEnabled(true);
             
             // Register the callback
-            viewPager.registerOnPageChangeCallback(pageChangeCallback);
+            if (pageChangeCallback != null) {
+                viewPager.registerOnPageChangeCallback(pageChangeCallback);
+            }
 
             // Set adapter
             viewPager.setAdapter(tabsAdapter);
@@ -266,6 +266,49 @@ public class ProfileFragment extends Fragment {
         if (user != null) {
             refreshUserData();
             fetchUserStats();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (viewPager != null && pageChangeCallback != null) {
+            viewPager.unregisterOnPageChangeCallback(pageChangeCallback);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Unregister callbacks first
+        if (viewPager != null && pageChangeCallback != null) {
+            viewPager.unregisterOnPageChangeCallback(pageChangeCallback);
+        }
+        
+        // Detach TabLayoutMediator
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+            tabLayoutMediator = null;
+        }
+        
+        // Clear references
+        viewPager = null;
+        tabLayout = null;
+        tabsAdapter = null;
+        isViewCreated = false;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_SELECTED_TAB, selectedTab);
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            selectedTab = savedInstanceState.getInt(KEY_SELECTED_TAB, DEFAULT_TAB);
         }
     }
 
@@ -419,28 +462,6 @@ public class ProfileFragment extends Fragment {
     private void showLoading(boolean show) {
         if (progressBar != null) {
             progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(KEY_SELECTED_TAB, selectedTab);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        isViewCreated = false;
-        
-        // Unregister callbacks
-        if (viewPager != null && pageChangeCallback != null) {
-            viewPager.unregisterOnPageChangeCallback(pageChangeCallback);
-        }
-        
-        // Detach mediator
-        if (tabLayoutMediator != null) {
-            tabLayoutMediator.detach();
         }
     }
 }

@@ -46,6 +46,13 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment:2.7.7'
     implementation 'androidx.navigation:navigation-ui:2.7.7'
     
+    // Google Play Services
+    implementation 'com.google.android.gms:play-services-base:18.3.0'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.gms:play-services-identity:18.0.1'
+    implementation 'com.google.android.gms:play-services-basement:18.3.0'
+    implementation 'com.google.android.gms:play-services-tasks:18.1.0'
+    
     // Swipe Refresh Layout
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     

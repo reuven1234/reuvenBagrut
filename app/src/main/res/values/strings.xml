@@ -119,4 +119,7 @@
     <string name="recipe_image">Recipe Image</string>
     <string name="author_image">Author Image</string>
     <string name="retry">Retry</string>
+    <string name="add_comment">Add a comment...</string>
+    <string name="post">Post</string>
+    <string name="sign_in_to_comment">Sign in to comment</string>
 </resources>

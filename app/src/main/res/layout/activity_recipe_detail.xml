@@ -84,13 +84,14 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
+        android:fillViewport="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="16dp">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/description"
@@ -138,42 +139,41 @@
                 app:layout_constraintTop_toBottomOf="@id/instructionsTitle"
                 tools:text="1. Step one\n2. Step two\n3. Step three"/>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="?android:attr/listDivider" />
+
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/commentsTitle"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
                 android:text="@string/comments"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                app:layout_constraintTop_toBottomOf="@id/recipeInstructions"/>
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:layout_marginBottom="8dp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/commentsRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:clipToPadding="false"
-                app:layout_constraintTop_toBottomOf="@id/commentsTitle"
-                tools:listitem="@layout/item_comment"
-                tools:itemCount="3"/>
+                android:nestedScrollingEnabled="false" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/commentInputLayout"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:hint="@string/add_comment_hint"
-                app:layout_constraintTop_toBottomOf="@id/commentsRecyclerView"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/postCommentButton"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                android:layout_marginTop="16dp"
+                android:hint="@string/add_comment"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/commentInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textMultiLine"
-                    android:maxLines="3"/>
+                    android:maxLines="3" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -181,15 +181,12 @@
                 android:id="@+id/postCommentButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/post_comment"
-                android:layout_marginEnd="16dp"
-                app:layout_constraintTop_toTopOf="@id/commentInputLayout"
-                app:layout_constraintBottom_toBottomOf="@id/commentInputLayout"
-                app:layout_constraintEnd_toEndOf="parent"
-                style="@style/Widget.Material3.Button"/>
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:text="@string/post"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -34,13 +34,17 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {
         Comment comment = comments.get(position);
         holder.userName.setText(comment.getUserName());
-        holder.commentContent.setText(comment.getContent());
+        holder.commentText.setText(comment.getText());
         
-        if (comment.getUserProfileImage() != null && !comment.getUserProfileImage().isEmpty()) {
+        if (comment.getUserPhotoUrl() != null && !comment.getUserPhotoUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
-                    .load(comment.getUserProfileImage())
+                    .load(comment.getUserPhotoUrl())
+                    .placeholder(R.drawable.ic_profile_placeholder)
+                    .error(R.drawable.ic_profile_placeholder)
                     .circleCrop()
                     .into(holder.userImage);
+        } else {
+            holder.userImage.setImageResource(R.drawable.ic_profile_placeholder);
         }
     }
 
@@ -52,13 +56,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     static class CommentViewHolder extends RecyclerView.ViewHolder {
         ImageView userImage;
         TextView userName;
-        TextView commentContent;
+        TextView commentText;
 
         CommentViewHolder(View itemView) {
             super(itemView);
             userImage = itemView.findViewById(R.id.commentUserImage);
             userName = itemView.findViewById(R.id.commentUserName);
-            commentContent = itemView.findViewById(R.id.commentContent);
+            commentText = itemView.findViewById(R.id.commentText);
         }
     }
 } 

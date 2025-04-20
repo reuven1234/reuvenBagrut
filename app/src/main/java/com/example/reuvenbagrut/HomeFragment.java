@@ -23,6 +23,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.Query;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
@@ -145,23 +146,16 @@ public class HomeFragment extends Fragment {
     private void loadRecipes() {
         showLoading(true);
         
-        List<Recipe> recipes = new ArrayList<>();
-        
         db.collection("recipes")
+          .orderBy("timestamp", Query.Direction.DESCENDING)
           .get()
           .addOnCompleteListener(task -> {
               if (task.isSuccessful() && isAdded()) {
+                  List<Recipe> recipes = new ArrayList<>();
                   for (QueryDocumentSnapshot document : task.getResult()) {
                       try {
-                          Recipe recipe = new Recipe();
+                          Recipe recipe = document.toObject(Recipe.class);
                           recipe.setIdMeal(document.getId());
-                          recipe.setStrMeal(document.getString("strMeal"));
-                          recipe.setStrCategory(document.getString("strCategory"));
-                          recipe.setStrInstructions(document.getString("strInstructions"));
-                          recipe.setStrMealThumb(document.getString("strMealThumb"));
-                          recipe.setStrAuthor(document.getString("strAuthor"));
-                          recipe.setStrAuthorImage(document.getString("strAuthorImage"));
-                          recipe.setUserId(document.getString("userId"));
                           
                           // Only add recipes that match the selected category or if "All" is selected
                           if (selectedCategory.equals("All") || 

@@ -36,8 +36,8 @@ import com.google.firebase.storage.UploadTask;
 public class AddRecipeFragment extends Fragment {
     private static final String TAG = "AddRecipeFragment";
     private static final int PICK_IMAGE_REQUEST = 1;
-    private static final int MAX_IMAGE_DIMENSION = 800;
-    private static final int JPEG_QUALITY = 50;
+    private static final int MAX_IMAGE_DIMENSION = 1024;
+    private static final int JPEG_QUALITY = 85;
     
     // State
     private boolean isImageChanged = false;
@@ -242,41 +242,79 @@ public class AddRecipeFragment extends Fragment {
             recipe.setStrAuthorImage(currentUser.getPhotoUrl().toString());
         }
 
-        // Convert image to Base64 if present
         if (isImageChanged && selectedImageBitmap != null) {
-            try {
-                String base64Image = convertBitmapToBase64(selectedImageBitmap);
-                recipe.setStrMealThumb(base64Image);
-                saveRecipe(recipe);
-            } catch (Exception e) {
-                Log.e(TAG, "Error converting image", e);
-                handleError(e, R.string.error_uploading_image);
-            }
+            uploadImageAndSaveRecipe(recipe);
         } else {
             saveRecipe(recipe);
         }
     }
 
-    private String convertBitmapToBase64(Bitmap bitmap) {
+    private void uploadImageAndSaveRecipe(final Recipe recipe) {
+        if (!isAdded()) return;
+
+        // Verify authentication
+        if (currentUser == null || currentUser.getUid() == null) {
+            Log.e(TAG, "User is not authenticated");
+            handleError(new Exception("User not authenticated"), R.string.error_not_authenticated);
+            return;
+        }
+
         try {
-            // Compress bitmap to reduce size
-            Bitmap compressedBitmap = compressImage(bitmap);
-            
-            // Convert to bytes
+            // Create file name with user ID for better organization
+            String userId = currentUser.getUid();
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String imageFileName = String.format("users/%s/recipes/%s.jpg", userId, timestamp);
+            Log.d(TAG, "Attempting to upload image: " + imageFileName);
+
+            // Get storage reference
+            StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageFileName);
+
+            // Prepare image data
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            compressedBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, baos);
-            byte[] imageBytes = baos.toByteArray();
-            
-            // Convert to Base64
-            String base64Image = android.util.Base64.encodeToString(imageBytes, android.util.Base64.DEFAULT);
-            
-            // Log the size for debugging
-            Log.d(TAG, "Base64 image size: " + base64Image.length() + " bytes");
-            
-            return "data:image/jpeg;base64," + base64Image;
+            selectedImageBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, baos);
+            byte[] imageData = baos.toByteArray();
+            Log.d(TAG, "Image size: " + imageData.length + " bytes");
+
+            // Show upload progress
+            showLoading(true);
+
+            // Start upload
+            UploadTask uploadTask = imageRef.putBytes(imageData);
+
+            uploadTask
+                .addOnProgressListener(taskSnapshot -> {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    Log.d(TAG, "Upload progress: " + progress + "%");
+                    if (progressBar != null) {
+                        progressBar.setProgress((int) progress);
+                    }
+                })
+                .addOnSuccessListener(taskSnapshot -> {
+                    Log.d(TAG, "Upload successful, getting download URL");
+                    imageRef.getDownloadUrl()
+                        .addOnSuccessListener(uri -> {
+                            Log.d(TAG, "Got download URL: " + uri.toString());
+                            recipe.setStrMealThumb(uri.toString());
+                            saveRecipe(recipe);
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Failed to get download URL", e);
+                            handleError(e, R.string.error_getting_image_url);
+                        });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Upload failed", e);
+                    if (e instanceof StorageException) {
+                        StorageException se = (StorageException) e;
+                        Log.e(TAG, "Storage error code: " + se.getErrorCode() + 
+                                  ", HTTP code: " + se.getHttpResultCode());
+                    }
+                    handleError(e, R.string.error_uploading_image);
+                });
+
         } catch (Exception e) {
-            Log.e(TAG, "Error converting image to base64", e);
-            throw e;
+            Log.e(TAG, "Error preparing upload", e);
+            handleError(e, R.string.error_uploading_image);
         }
     }
 

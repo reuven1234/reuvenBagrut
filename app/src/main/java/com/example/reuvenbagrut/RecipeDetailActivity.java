@@ -30,6 +30,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import android.os.Handler;
+import android.os.Looper;
 
 public class RecipeDetailActivity extends AppCompatActivity {
     private static final String TAG = "RecipeDetailActivity";
@@ -75,6 +77,16 @@ public class RecipeDetailActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
+        
+        // Add auth state listener
+        auth.addAuthStateListener(firebaseAuth -> {
+            currentUser = firebaseAuth.getCurrentUser();
+            Log.d(TAG, "Auth state changed. Current user: " + (currentUser != null ? currentUser.getUid() : "null"));
+            updateUIForAuthState();
+            if (currentUser != null) {
+                loadComments(); // Reload comments when user signs in
+            }
+        });
 
         // Initialize views
         initializeViews();
@@ -98,18 +110,22 @@ public class RecipeDetailActivity extends AppCompatActivity {
         super.onStart();
         // Update current user when activity starts
         currentUser = auth.getCurrentUser();
+        Log.d(TAG, "onStart: Current user = " + (currentUser != null ? currentUser.getUid() : "null"));
         updateUIForAuthState();
     }
 
     private void updateUIForAuthState() {
+        Log.d(TAG, "updateUIForAuthState: Current user = " + (currentUser != null ? currentUser.getUid() : "null"));
         if (currentUser == null) {
             // User is not signed in
+            Log.d(TAG, "updateUIForAuthState: User not signed in, disabling comment UI");
             postCommentButton.setEnabled(false);
             commentInput.setEnabled(false);
             commentInput.setHint(R.string.sign_in_to_comment);
             favoriteButton.setVisibility(View.GONE);
         } else {
             // User is signed in
+            Log.d(TAG, "updateUIForAuthState: User signed in, enabling comment UI");
             postCommentButton.setEnabled(true);
             commentInput.setEnabled(true);
             commentInput.setHint(R.string.add_comment);
@@ -201,102 +217,134 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
     private void loadComments() {
         if (recipeId == null) {
-            Log.e(TAG, "Recipe ID is null");
+            Log.e(TAG, "Recipe ID is null, cannot load comments");
             return;
         }
 
-        // Initialize comments list if null
-        if (comments == null) {
-            comments = new ArrayList<>();
-        }
+        // Clear existing comments
+        comments.clear();
+        commentAdapter.notifyDataSetChanged();
 
-        try {
-            db.collection("recipes").document(recipeId)
-                .collection("comments")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .addSnapshotListener((snapshots, error) -> {
-                    if (error != null) {
-                        Log.e(TAG, "Listen failed.", error);
-                        if (error.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
-                            // Handle permission denied error
-                            Snackbar.make(findViewById(android.R.id.content),
-                                    "Please sign in to view comments",
-                                    Snackbar.LENGTH_SHORT).show();
-                        } else {
-                            Snackbar.make(findViewById(android.R.id.content),
-                                    "Error loading comments",
-                                    Snackbar.LENGTH_SHORT).show();
-                        }
-                        return;
-                    }
+        // Show loading indicator
+        showLoading(true);
 
-                    if (snapshots != null && !snapshots.isEmpty()) {
-                        comments.clear();
-                        for (QueryDocumentSnapshot document : snapshots) {
-                            try {
-                                Comment comment = document.toObject(Comment.class);
-                                comment.setId(document.getId());
-                                comments.add(comment);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error parsing comment: " + document.getId(), e);
+        Log.d(TAG, "Loading comments for recipe: " + recipeId);
+        Log.d(TAG, "Current user: " + (currentUser != null ? currentUser.getUid() : "null"));
+
+        db.collection("recipes").document(recipeId)
+            .collection("comments")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener((value, error) -> {
+                showLoading(false);
+                
+                if (error != null) {
+                    Log.e(TAG, "Error loading comments", error);
+                    if (error instanceof FirebaseFirestoreException) {
+                        FirebaseFirestoreException firestoreError = (FirebaseFirestoreException) error;
+                        if (firestoreError.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                            Log.e(TAG, "Permission denied while loading comments. Current user: " + 
+                                (currentUser != null ? currentUser.getUid() : "null"));
+                            
+                            // Show appropriate message based on auth state
+                            if (currentUser == null) {
+                                Snackbar.make(findViewById(android.R.id.content), 
+                                    "Please sign in to view comments", 
+                                    Snackbar.LENGTH_LONG)
+                                    .setAction("Sign In", v -> {
+                                        Intent intent = new Intent(this, Login.class);
+                                        startActivity(intent);
+                                    })
+                                    .show();
+                            } else {
+                                Snackbar.make(findViewById(android.R.id.content), 
+                                    "Error loading comments. Please try again.", 
+                                    Snackbar.LENGTH_LONG)
+                                    .show();
                             }
                         }
-                        commentAdapter.notifyDataSetChanged();
-                    } else {
-                        comments.clear();
-                        commentAdapter.notifyDataSetChanged();
                     }
-                });
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting up comments listener", e);
-            Snackbar.make(findViewById(android.R.id.content),
-                    "Error loading comments",
-                    Snackbar.LENGTH_SHORT).show();
-        }
+                    return;
+                }
+
+                if (value != null) {
+                    comments.clear();
+                    for (QueryDocumentSnapshot doc : value) {
+                        Comment comment = doc.toObject(Comment.class);
+                        comment.setId(doc.getId());
+                        comments.add(comment);
+                        Log.d(TAG, "Loaded comment: " + comment.getId());
+                    }
+                    commentAdapter.notifyDataSetChanged();
+                    
+                    // Show empty state if no comments
+                    if (comments.isEmpty()) {
+                        Snackbar.make(findViewById(android.R.id.content), 
+                            "No comments yet. Be the first to comment!", 
+                            Snackbar.LENGTH_SHORT)
+                            .show();
+                    } else {
+                        Log.d(TAG, "Successfully loaded " + comments.size() + " comments");
+                    }
+                }
+            });
     }
 
     private void postComment() {
         if (currentUser == null) {
-            Snackbar.make(findViewById(android.R.id.content),
-                    "Please sign in to comment",
-                    Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), 
+                "Please sign in to comment", 
+                Snackbar.LENGTH_LONG)
+                .setAction("Sign In", v -> {
+                    Intent intent = new Intent(this, Login.class);
+                    startActivity(intent);
+                })
+                .show();
             return;
         }
 
         String commentText = commentInput.getText().toString().trim();
         if (commentText.isEmpty()) {
-            Snackbar.make(findViewById(android.R.id.content),
-                    "Please enter a comment",
-                    Snackbar.LENGTH_SHORT).show();
+            commentInput.setError("Comment cannot be empty");
             return;
         }
 
-        // Disable the post button while comment is being posted
+        // Disable the post button while posting
         postCommentButton.setEnabled(false);
 
-        Comment comment = new Comment(
-            currentUser.getUid(),
-            currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Anonymous",
-            currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : "",
-            commentText
-        );
+        // Create a new comment document
+        Map<String, Object> comment = new HashMap<>();
+        comment.put("text", commentText);
+        comment.put("userId", currentUser.getUid());
+        comment.put("userName", currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Anonymous");
+        comment.put("userPhotoUrl", currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
+        comment.put("timestamp", System.currentTimeMillis());
+        comment.put("recipeId", recipeId);
 
+        Log.d(TAG, "Posting comment with userId: " + currentUser.getUid() + ", recipeId: " + recipeId);
+
+        // Add the comment to the subcollection
         db.collection("recipes").document(recipeId)
             .collection("comments")
             .add(comment)
             .addOnSuccessListener(documentReference -> {
+                Log.d(TAG, "Comment posted successfully with ID: " + documentReference.getId());
                 commentInput.setText("");
-                Snackbar.make(findViewById(android.R.id.content),
-                        "Comment posted",
-                        Snackbar.LENGTH_SHORT).show();
                 postCommentButton.setEnabled(true);
+                Snackbar.make(findViewById(android.R.id.content), "Comment posted", Snackbar.LENGTH_SHORT).show();
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error posting comment", e);
-                Snackbar.make(findViewById(android.R.id.content),
-                        "Error posting comment",
-                        Snackbar.LENGTH_SHORT).show();
                 postCommentButton.setEnabled(true);
+                if (e instanceof FirebaseFirestoreException) {
+                    FirebaseFirestoreException firestoreError = (FirebaseFirestoreException) e;
+                    if (firestoreError.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        Log.e(TAG, "Permission denied. Current user: " + (currentUser != null ? currentUser.getUid() : "null"));
+                        Snackbar.make(findViewById(android.R.id.content), 
+                            "Error posting comment. Please try again.", 
+                            Snackbar.LENGTH_LONG)
+                            .show();
+                    }
+                }
             });
     }
 

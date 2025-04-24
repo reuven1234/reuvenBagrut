@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.reuvenbagrut.HomeFragment"
+        android:label="@string/home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_recipe_detail"
+            app:destination="@id/navigation_recipe_detail" />
+        <action
+            android:id="@+id/action_home_to_search"
+            app:destination="@id/navigation_search" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_favorites"
+        android:name="com.example.reuvenbagrut.LikedRecipesFragment"
+        android:label="@string/favorites"
+        tools:layout="@layout/fragment_favorites">
+        <action
+            android:id="@+id/action_favorites_to_recipe_detail"
+            app:destination="@id/navigation_recipe_detail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.example.reuvenbagrut.ProfileFragment"
+        android:label="@string/profile"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_edit_profile"
+            app:destination="@id/navigation_edit_profile" />
+        <action
+            android:id="@+id/action_profile_to_user_profile"
+            app:destination="@id/navigation_user_profile" />
+    </fragment>
+
+    <activity
+        android:id="@+id/navigation_recipe_detail"
+        android:name="com.example.reuvenbagrut.RecipeDetailActivity"
+        android:label="@string/recipe_details"
+        tools:layout="@layout/activity_recipe_detail" />
+
+    <activity
+        android:id="@+id/navigation_search"
+        android:name="com.example.reuvenbagrut.SearchActivity"
+        android:label="@string/search_recipes"
+        tools:layout="@layout/activity_search" />
+
+    <activity
+        android:id="@+id/navigation_edit_profile"
+        android:name="com.example.reuvenbagrut.EditProfileActivity"
+        android:label="@string/edit_profile"
+        tools:layout="@layout/activity_edit_profile" />
+
+    <activity
+        android:id="@+id/navigation_user_profile"
+        android:name="com.example.reuvenbagrut.UserProfileActivity"
+        android:label="@string/user_profile"
+        tools:layout="@layout/activity_user_profile" />
+
+</navigation> 

@@ -29,8 +29,6 @@
         android:scrollbars="vertical"
         android:scrollbarStyle="outsideOverlay"
         android:fadeScrollbars="false"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
         android:overScrollMode="always"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
@@ -39,6 +37,7 @@
             android:layout_height="wrap_content"
             android:paddingHorizontal="16dp"
             android:paddingTop="16dp"
+            android:paddingBottom="80dp"
             android:clipToPadding="false">
 
             <com.google.android.material.card.MaterialCardView

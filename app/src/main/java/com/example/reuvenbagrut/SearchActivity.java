@@ -1,163 +1,96 @@
 package com.example.reuvenbagrut;
 
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.widget.EditText;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchActivity extends AppCompatActivity {
-    private static final String TAG = "SearchActivity";
-
-    private RecyclerView recyclerView;
-    private RecipeAdapter recipeAdapter;
-    private EditText searchEditText;
+    private TextInputLayout searchInputLayout;
+    private TextInputEditText searchInput;
+    private RecyclerView searchResultsRecyclerView;
+    private ProgressBar progressBar;
     private TextView emptyStateText;
-    private View progressIndicator;
+    private RecipeAdapter recipeAdapter;
+    private List<Recipe> searchResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        searchEditText = findViewById(R.id.searchEditText);
-        recyclerView = findViewById(R.id.recyclerView);
-        
-        // These views might not exist in the layout, so we'll handle them safely
-        try {
-            emptyStateText = findViewById(R.id.emptyStateText);
-            progressIndicator = findViewById(R.id.progressIndicator);
-        } catch (Exception e) {
-            Log.w(TAG, "Some UI elements were not found in the layout", e);
-        }
-        
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // Initialize views
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        recipeAdapter = new RecipeAdapter();
-        recyclerView.setAdapter(recipeAdapter);
-        
-        // Set click listener for recipes
-        recipeAdapter.setOnRecipeClickListener((recipe, position) -> {
-            if (recipe != null) {
-                // Navigate to recipe detail
-                navigateToRecipeDetail(recipe);
-            }
-        });
+        searchInputLayout = findViewById(R.id.searchInputLayout);
+        searchInput = findViewById(R.id.searchInput);
+        searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
+        progressBar = findViewById(R.id.progressBar);
+        emptyStateText = findViewById(R.id.emptyStateText);
 
-        // Set up a TextWatcher to detect changes in the EditText
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-                // No need to implement this method
-            }
+        // Setup RecyclerView
+        searchResults = new ArrayList<>();
+        recipeAdapter = new RecipeAdapter(searchResults, this);
+        searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        searchResultsRecyclerView.setAdapter(recipeAdapter);
 
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                // When the user types, we trigger the search
-                String query = charSequence.toString().trim();
-                if (query.length() >= 2) {
-                    searchRecipes(query);
-                } else if (query.isEmpty()) {
-                    // If the query is empty, clear the RecyclerView
-                    recipeAdapter.setRecipes(new ArrayList<>());
-                    showEmptyState(true);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                // No need to implement this method
-            }
+        // Setup search input
+        searchInput.setOnEditorActionListener((v, actionId, event) -> {
+            performSearch();
+            return true;
         });
     }
 
-    private void searchRecipes(String query) {
+    private void performSearch() {
+        String query = searchInput.getText().toString().trim();
+        if (query.isEmpty()) {
+            searchInputLayout.setError(getString(R.string.enter_search_query));
+            return;
+        }
+
+        searchInputLayout.setError(null);
         showLoading(true);
-        
-        FirebaseFirestore.getInstance().collection("recipes")
-            .get()
-            .addOnCompleteListener(task -> {
-                showLoading(false);
-                
-                if (task.isSuccessful()) {
-                    List<Recipe> matchingRecipes = new ArrayList<>();
-                    
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        try {
-                            Recipe recipe = new Recipe();
-                            recipe.setIdMeal(document.getId());
-                            recipe.setStrMeal(document.getString("strMeal"));
-                            recipe.setStrCategory(document.getString("strCategory"));
-                            recipe.setStrInstructions(document.getString("strInstructions"));
-                            recipe.setStrMealThumb(document.getString("strMealThumb"));
-                            recipe.setStrAuthor(document.getString("strAuthor"));
-                            recipe.setStrAuthorImage(document.getString("strAuthorImage"));
-                            recipe.setUserId(document.getString("userId"));
-                            
-                            // Check if recipe matches search query
-                            if (recipe.getStrMeal() != null && 
-                                recipe.getStrMeal().toLowerCase().contains(query.toLowerCase())) {
-                                matchingRecipes.add(recipe);
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error parsing recipe", e);
-                        }
-                    }
-                    
-                    recipeAdapter.setRecipes(matchingRecipes);
-                    showEmptyState(matchingRecipes.isEmpty());
-                } else {
-                    Snackbar.make(findViewById(android.R.id.content), 
-                                  "Error searching recipes", Snackbar.LENGTH_SHORT).show();
-                    showEmptyState(true);
-                }
-            })
-            .addOnFailureListener(e -> {
-                showLoading(false);
-                Log.e(TAG, "Error searching recipes", e);
-                Snackbar.make(findViewById(android.R.id.content), 
-                              "Failed to search recipes", Snackbar.LENGTH_SHORT).show();
-                showEmptyState(true);
-            });
+
+        // TODO: Implement actual search logic using RecipeApiClient
+        // For now, we'll just show a loading state
+        new android.os.Handler().postDelayed(() -> {
+            showLoading(false);
+            showEmptyState(true);
+        }, 2000);
     }
-    
-    private void navigateToRecipeDetail(Recipe recipe) {
-        android.content.Intent intent = new android.content.Intent(this, RecipeDetailActivity.class);
-        intent.putExtra("recipe_id", recipe.getIdMeal());
-        startActivity(intent);
-    }
-    
+
     private void showLoading(boolean show) {
-        if (progressIndicator != null) {
-            progressIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
-            if (show) {
-                recyclerView.setVisibility(View.GONE);
-                if (emptyStateText != null) {
-                    emptyStateText.setVisibility(View.GONE);
-                }
-            } else {
-                recyclerView.setVisibility(View.VISIBLE);
-            }
-        }
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        searchResultsRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+        emptyStateText.setVisibility(View.GONE);
     }
-    
+
     private void showEmptyState(boolean show) {
-        if (emptyStateText != null) {
-            emptyStateText.setVisibility(show ? View.VISIBLE : View.GONE);
-            recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        emptyStateText.setVisibility(show ? View.VISIBLE : View.GONE);
+        searchResultsRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
-}
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+} 

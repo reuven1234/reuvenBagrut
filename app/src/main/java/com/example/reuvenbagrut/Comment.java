@@ -1,5 +1,6 @@
 package com.example.reuvenbagrut;
 
+import com.google.firebase.Timestamp;
 import java.util.Date;
 
 public class Comment {
@@ -68,5 +69,10 @@ public class Comment {
 
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
+    }
+
+    // For Firestore timestamp conversion
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp.toDate();
     }
 } 

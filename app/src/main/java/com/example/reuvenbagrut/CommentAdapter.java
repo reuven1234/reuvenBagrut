@@ -8,7 +8,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
     private List<Comment> comments;
@@ -36,6 +38,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         holder.userName.setText(comment.getUserName());
         holder.commentText.setText(comment.getText());
         
+        // Format and set timestamp
+        if (comment.getTimestamp() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+            holder.commentTime.setText(sdf.format(comment.getTimestamp()));
+        }
+        
+        // Load user profile image
         if (comment.getUserPhotoUrl() != null && !comment.getUserPhotoUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(comment.getUserPhotoUrl())
@@ -57,12 +66,14 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         ImageView userImage;
         TextView userName;
         TextView commentText;
+        TextView commentTime;
 
         CommentViewHolder(View itemView) {
             super(itemView);
             userImage = itemView.findViewById(R.id.commentUserImage);
             userName = itemView.findViewById(R.id.commentUserName);
             commentText = itemView.findViewById(R.id.commentText);
+            commentTime = itemView.findViewById(R.id.commentTime);
         }
     }
 } 

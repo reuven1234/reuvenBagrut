@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:scaleType="centerCrop"
-            tools:src="@tools:sample/backgrounds/scenic" />
+            android:contentDescription="@string/recipe_image_description" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -30,43 +30,37 @@
                 android:id="@+id/recipeTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:textAppearance="?attr/textAppearanceHeadline6"
                 tools:text="Delicious Recipe Name" />
 
             <TextView
-                android:id="@+id/recipeDescription"
+                android:id="@+id/recipeCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textAppearance="?attr/textAppearanceBody2"
                 tools:text="A brief description of the recipe that might be a bit longer and need to be truncated..." />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/cookingTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="4dp"
-                    android:gravity="center_vertical"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                    tools:text="30 min" />
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/authorImage"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/CircleImageView" />
 
                 <TextView
-                    android:id="@+id/difficultyLevel"
+                    android:id="@+id/authorName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:drawablePadding="4dp"
-                    android:gravity="center_vertical"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                    tools:text="Medium" />
+                    android:layout_marginStart="8dp"
+                    android:textAppearance="?attr/textAppearanceBody2" />
 
             </LinearLayout>
 

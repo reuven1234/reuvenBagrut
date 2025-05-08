@@ -1,30 +1,32 @@
 package com.example.reuvenbagrut;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.example.reuvenbagrut.R;
+import com.example.reuvenbagrut.Recipe;
+import com.example.reuvenbagrut.adapters.RecipeAdapter;
+import com.example.reuvenbagrut.activities.RecipeDetailActivity;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchActivity extends AppCompatActivity {
-    private TextInputLayout searchInputLayout;
+public class SearchActivity extends AppCompatActivity implements RecipeAdapter.OnRecipeClickListener {
     private TextInputEditText searchInput;
-    private RecyclerView searchResultsRecyclerView;
-    private ProgressBar progressBar;
-    private TextView emptyStateText;
+    private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
+    private CircularProgressIndicator progressIndicator;
+    private FirebaseFirestore db;
     private List<Recipe> searchResults;
 
     @Override
@@ -32,57 +34,78 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        // Initialize Firebase
+        db = FirebaseFirestore.getInstance();
+
         // Initialize views
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(R.string.search_recipes);
 
-        searchInputLayout = findViewById(R.id.searchInputLayout);
         searchInput = findViewById(R.id.searchInput);
-        searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
-        progressBar = findViewById(R.id.progressBar);
-        emptyStateText = findViewById(R.id.emptyStateText);
+        recyclerView = findViewById(R.id.searchResultsRecyclerView);
+        progressIndicator = findViewById(R.id.progressIndicator);
 
         // Setup RecyclerView
-        searchResults = new ArrayList<>();
-        recipeAdapter = new RecipeAdapter(searchResults, this);
-        searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        searchResultsRecyclerView.setAdapter(recipeAdapter);
+        setupRecyclerView();
 
-        // Setup search input
-        searchInput.setOnEditorActionListener((v, actionId, event) -> {
-            performSearch();
-            return true;
-        });
+        // Setup search button
+        findViewById(R.id.searchButton).setOnClickListener(v -> performSearch());
+    }
+
+    private void setupRecyclerView() {
+        searchResults = new ArrayList<>();
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        recipeAdapter = new RecipeAdapter(searchResults, this);
+        recyclerView.setAdapter(recipeAdapter);
     }
 
     private void performSearch() {
-        String query = searchInput.getText().toString().trim();
+        String query = searchInput.getText().toString().trim().toLowerCase();
         if (query.isEmpty()) {
-            searchInputLayout.setError(getString(R.string.enter_search_query));
+            searchInput.setError("Please enter a search term");
             return;
         }
 
-        searchInputLayout.setError(null);
-        showLoading(true);
-
-        // TODO: Implement actual search logic using RecipeApiClient
-        // For now, we'll just show a loading state
-        new android.os.Handler().postDelayed(() -> {
-            showLoading(false);
-            showEmptyState(true);
-        }, 2000);
+        showProgress(true);
+        db.collection("recipes")
+                .orderBy("strMeal")
+                .startAt(query)
+                .endAt(query + "\uf8ff")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<Recipe> recipes = new ArrayList<>();
+                        task.getResult().forEach(document -> {
+                            Recipe recipe = document.toObject(Recipe.class);
+                            recipe.setId(document.getId());
+                            recipes.add(recipe);
+                        });
+                        recipeAdapter.updateRecipes(recipes);
+                        showEmptyState(recipes.isEmpty());
+                    } else {
+                        Toast.makeText(this, "Error searching recipes", Toast.LENGTH_SHORT).show();
+                    }
+                    showProgress(false);
+                });
     }
 
-    private void showLoading(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        searchResultsRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-        emptyStateText.setVisibility(View.GONE);
+    private void showProgress(boolean show) {
+        progressIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
     private void showEmptyState(boolean show) {
-        emptyStateText.setVisibility(show ? View.VISIBLE : View.GONE);
-        searchResultsRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+        findViewById(R.id.emptyStateView).setVisibility(show ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    public void onRecipeClick(Recipe recipe) {
+        Intent intent = new Intent(this, RecipeDetailActivity.class);
+        intent.putExtra("recipe_id", recipe.getId());
+        startActivity(intent);
     }
 
     @Override

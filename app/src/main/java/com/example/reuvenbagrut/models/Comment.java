@@ -1,19 +1,23 @@
 package com.example.reuvenbagrut.models;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class Comment {
     private String id;
     private String userId;
     private String text;
-    private long timestamp;
+    private Date timestamp;
 
     public Comment() {
         // Default constructor required for Firebase
     }
 
-    public Comment(String userId, String text, long timestamp) {
+    public Comment(String userId, String text) {
         this.userId = userId;
         this.text = text;
-        this.timestamp = timestamp;
+        this.timestamp = new Date();
     }
 
     public String getId() {
@@ -40,11 +44,23 @@ public class Comment {
         this.text = text;
     }
 
-    public long getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(long timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getFormattedTime() {
+        if (timestamp == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+        return sdf.format(timestamp);
+    }
+
+    public User getUser() {
+        // This is a placeholder - the actual user data should be loaded from Firestore
+        // when the comment is displayed
+        return null;
     }
 } 

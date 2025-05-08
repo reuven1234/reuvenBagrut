@@ -3,6 +3,8 @@ package com.example.reuvenbagrut.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,12 +13,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.reuvenbagrut.R;
-import com.example.reuvenbagrut.models.Recipe;
+import com.example.reuvenbagrut.Recipe;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
+public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> implements Filterable {
     private List<Recipe> recipes;
+    private List<Recipe> allRecipes;
     private OnRecipeClickListener listener;
 
     public interface OnRecipeClickListener {
@@ -25,7 +29,14 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
 
     public RecipeAdapter(List<Recipe> recipes, OnRecipeClickListener listener) {
         this.recipes = recipes;
+        this.allRecipes = new ArrayList<>(recipes);
         this.listener = listener;
+    }
+
+    public void updateRecipes(List<Recipe> newRecipes) {
+        this.recipes = newRecipes;
+        this.allRecipes = new ArrayList<>(newRecipes);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -40,54 +51,83 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     public void onBindViewHolder(@NonNull RecipeViewHolder holder, int position) {
         Recipe recipe = recipes.get(position);
         holder.bind(recipe);
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onRecipeClick(recipe);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return recipes != null ? recipes.size() : 0;
+        return recipes.size();
     }
 
-    public void updateRecipes(List<Recipe> newRecipes) {
-        this.recipes = newRecipes;
-        notifyDataSetChanged();
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                List<Recipe> filteredList = new ArrayList<>();
+                
+                if (constraint == null || constraint.length() == 0) {
+                    filteredList.addAll(allRecipes);
+                } else {
+                    String filterPattern = constraint.toString().toLowerCase().trim();
+                    for (Recipe recipe : allRecipes) {
+                        if (recipe.getStrMeal().toLowerCase().contains(filterPattern)) {
+                            filteredList.add(recipe);
+                        }
+                    }
+                }
+
+                FilterResults results = new FilterResults();
+                results.values = filteredList;
+                results.count = filteredList.size();
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                recipes.clear();
+                recipes.addAll((List<Recipe>) results.values);
+                notifyDataSetChanged();
+            }
+        };
     }
 
-    class RecipeViewHolder extends RecyclerView.ViewHolder {
-        private ImageView recipeImage;
-        private TextView recipeTitle;
-        private TextView recipeDescription;
-        private TextView cookingTime;
-        private TextView difficultyLevel;
+    static class RecipeViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView recipeImage;
+        private final TextView recipeTitle;
+        private final TextView recipeCategory;
+        private final TextView authorName;
 
-        RecipeViewHolder(@NonNull View itemView) {
+        RecipeViewHolder(View itemView) {
             super(itemView);
             recipeImage = itemView.findViewById(R.id.recipeImage);
             recipeTitle = itemView.findViewById(R.id.recipeTitle);
-            recipeDescription = itemView.findViewById(R.id.recipeDescription);
-            cookingTime = itemView.findViewById(R.id.cookingTime);
-            difficultyLevel = itemView.findViewById(R.id.difficultyLevel);
-
-            itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onRecipeClick(recipes.get(position));
-                }
-            });
+            recipeCategory = itemView.findViewById(R.id.recipeCategory);
+            authorName = itemView.findViewById(R.id.authorName);
         }
 
         void bind(Recipe recipe) {
-            recipeTitle.setText(recipe.getTitle());
-            recipeDescription.setText(recipe.getDescription());
-            cookingTime.setText(recipe.getCookingTime());
-            difficultyLevel.setText(recipe.getDifficultyLevel());
+            recipeTitle.setText(recipe.getStrMeal());
+            recipeCategory.setText(recipe.getStrCategory());
 
-            // Load recipe image using Glide
-            Glide.with(itemView.getContext())
-                    .load(recipe.getImageUrl())
-                    .placeholder(R.drawable.placeholder_image)
-                    .error(R.drawable.error_image)
+            if (recipe.getStrMealThumb() != null && !recipe.getStrMealThumb().isEmpty()) {
+                Glide.with(itemView.getContext())
+                    .load(recipe.getStrMealThumb())
                     .centerCrop()
                     .into(recipeImage);
+            }
+
+            // Load author details if available
+            if (recipe.getStrAuthor() != null) {
+                authorName.setText(recipe.getStrAuthor());
+                authorName.setVisibility(View.VISIBLE);
+            } else {
+                authorName.setVisibility(View.GONE);
+            }
         }
     }
 } 

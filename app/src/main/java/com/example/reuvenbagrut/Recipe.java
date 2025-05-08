@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Recipe {
+    private String id;
     private String idMeal;
     private String strMeal;
     private String strCategory;
@@ -29,6 +30,9 @@ public class Recipe {
     }
 
     // Getters and setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
     public String getIdMeal() { return idMeal; }
     public void setIdMeal(String idMeal) { this.idMeal = idMeal; }
 

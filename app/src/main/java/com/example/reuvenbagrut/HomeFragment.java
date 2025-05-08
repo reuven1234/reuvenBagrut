@@ -24,11 +24,13 @@ import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.Query;
+import com.example.reuvenbagrut.adapters.RecipeAdapter;
+import com.example.reuvenbagrut.Recipe;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
     private static final String KEY_SELECTED_CATEGORY = "selected_category";
-    private static final int GRID_SPAN_COUNT = 1;
+    private static final int GRID_SPAN_COUNT = 2;
 
     private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
@@ -43,6 +45,7 @@ public class HomeFragment extends Fragment {
     
     private FirebaseUser currentUser;
     private String selectedCategory = "All";
+    private List<Recipe> recipes = new ArrayList<>();
 
     public HomeFragment() {
         // Required empty public constructor
@@ -63,18 +66,27 @@ public class HomeFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_home, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        
+        // Initialize views
         initializeViews(view);
+        
+        // Setup RecyclerView
         setupRecyclerView();
+        
+        // Setup search view
         setupSearchView();
+        
+        // Setup swipe refresh
         setupSwipeRefresh();
+        
+        // Setup category chips
         setupCategoryChips();
+        
+        // Load recipes
         loadRecipes();
+        
+        return view;
     }
 
     private void initializeViews(View view) {
@@ -100,11 +112,9 @@ public class HomeFragment extends Fragment {
         recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER); // Disable overscroll effect in the RecyclerView
         
         // Setup adapter
-        recipeAdapter = new RecipeAdapter();
-        recipeAdapter.setOnRecipeClickListener((recipe, position) -> {
-            if (recipe != null && isAdded()) {
-                navigateToRecipeDetail(recipe);
-            }
+        recipeAdapter = new RecipeAdapter(recipes, recipe -> {
+            // Handle recipe click
+            navigateToRecipeDetail(recipe);
         });
         recyclerView.setAdapter(recipeAdapter);
     }
@@ -134,9 +144,14 @@ public class HomeFragment extends Fragment {
 
     private void setupCategoryChips() {
         categoryChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            // Get selected category and reload recipes
-            selectedCategory = getSelectedCategory(checkedId);
-            loadRecipes();
+            if (checkedId == View.NO_ID) return;
+            
+            // Get the selected chip
+            com.google.android.material.chip.Chip chip = group.findViewById(checkedId);
+            if (chip != null) {
+                selectedCategory = chip.getText().toString();
+                loadRecipes();
+            }
         });
 
         // Set initial selection
@@ -145,6 +160,7 @@ public class HomeFragment extends Fragment {
 
     private void loadRecipes() {
         showLoading(true);
+        Log.d(TAG, "Starting to load recipes...");
         
         db.collection("recipes")
           .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -152,28 +168,37 @@ public class HomeFragment extends Fragment {
           .addOnCompleteListener(task -> {
               if (task.isSuccessful() && isAdded()) {
                   List<Recipe> recipes = new ArrayList<>();
+                  Log.d(TAG, "Query successful. Document count: " + task.getResult().size());
+                  
                   for (QueryDocumentSnapshot document : task.getResult()) {
                       try {
+                          Log.d(TAG, "Processing document: " + document.getId());
                           Recipe recipe = document.toObject(Recipe.class);
-                          recipe.setIdMeal(document.getId());
+                          recipe.setId(document.getId());
+                          Log.d(TAG, "Recipe data - Title: " + recipe.getStrMeal() + 
+                                    ", Category: " + recipe.getStrCategory());
                           
                           // Only add recipes that match the selected category or if "All" is selected
                           if (selectedCategory.equals("All") || 
                               (recipe.getStrCategory() != null && recipe.getStrCategory().equals(selectedCategory))) {
                               recipes.add(recipe);
+                              Log.d(TAG, "Added recipe to list");
+                          } else {
+                              Log.d(TAG, "Recipe skipped - category mismatch. Selected: " + selectedCategory);
                           }
                       } catch (Exception e) {
-                          Log.e(TAG, "Error parsing recipe", e);
+                          Log.e(TAG, "Error parsing recipe: " + e.getMessage(), e);
                       }
                   }
                   
+                  Log.d(TAG, "Final recipes list size: " + recipes.size());
                   updateRecipeList(recipes);
                   showLoading(false);
-              } else {
-                  if (isAdded()) {
-                      showError(getString(R.string.error_loading_recipes));
-                      showLoading(false);
-                  }
+              } else if (isAdded()) {
+                  Log.e(TAG, "Error loading recipes: " + 
+                        (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
+                  showError(getString(R.string.error_loading_recipes));
+                  showLoading(false);
               }
           })
           .addOnFailureListener(e -> {
@@ -187,8 +212,11 @@ public class HomeFragment extends Fragment {
 
     private void updateRecipeList(List<Recipe> recipes) {
         if (recipeAdapter != null) {
-            recipeAdapter.setRecipes(recipes);
+            Log.d(TAG, "Updating adapter with " + recipes.size() + " recipes");
+            recipeAdapter.updateRecipes(recipes);
             updateEmptyState(recipes.isEmpty());
+        } else {
+            Log.e(TAG, "RecipeAdapter is null!");
         }
     }
 
@@ -237,18 +265,9 @@ public class HomeFragment extends Fragment {
     private void navigateToRecipeDetail(Recipe recipe) {
         if (getActivity() != null && recipe != null) {
             Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
-            intent.putExtra("recipe_id", recipe.getIdMeal());
+            intent.putExtra("recipe_id", recipe.getId());
             startActivity(intent);
         }
-    }
-
-    private String getSelectedCategory(int checkedId) {
-        if (checkedId == R.id.chipAll) return "All";
-        if (checkedId == R.id.chipBreakfast) return "Breakfast";
-        if (checkedId == R.id.chipLunch) return "Lunch";
-        if (checkedId == R.id.chipDinner) return "Dinner";
-        if (checkedId == R.id.chipDessert) return "Dessert";
-        return "All";
     }
 
     private int getCategoryChipId(String category) {

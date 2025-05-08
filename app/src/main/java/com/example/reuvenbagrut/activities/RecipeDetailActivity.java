@@ -17,19 +17,22 @@ import com.bumptech.glide.Glide;
 import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.adapters.CommentAdapter;
 import com.example.reuvenbagrut.models.Comment;
-import com.example.reuvenbagrut.models.Recipe;
-import com.example.reuvenbagrut.models.User;
+import com.example.reuvenbagrut.Recipe;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RecipeDetailActivity extends AppCompatActivity {
     private com.google.android.material.imageview.ShapeableImageView recipeImage;
@@ -44,7 +47,6 @@ public class RecipeDetailActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private String recipeId;
     private Recipe recipe;
-    private User author;
     private CommentAdapter commentAdapter;
     private List<Comment> comments;
     private boolean isAuthor;
@@ -98,32 +100,57 @@ public class RecipeDetailActivity extends AppCompatActivity {
     private void loadRecipeData() {
         db.collection("recipes").document(recipeId)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            recipe = document.toObject(Recipe.class);
-                            if (recipe != null) {
-                                loadAuthorData();
-                                loadComments();
-                                updateUI();
-                                checkIfAuthor();
-                            }
+                .addOnSuccessListener(documentSnapshot -> {
+                    recipe = documentSnapshot.toObject(Recipe.class);
+                    if (recipe != null) {
+                        // Set recipe data
+                        getSupportActionBar().setTitle(recipe.getStrMeal());
+                        description.setText(recipe.getStrInstructions());
+                        
+                        // Format ingredients list
+                        StringBuilder ingredientsBuilder = new StringBuilder();
+                        for (String ingredient : recipe.getIngredients()) {
+                            ingredientsBuilder.append("• ").append(ingredient).append("\n");
                         }
-                    }
-                });
-    }
+                        recipeIngredients.setText(ingredientsBuilder.toString());
+                        
+                        // Format instructions
+                        StringBuilder instructionsBuilder = new StringBuilder();
+                        String[] instructions = recipe.getStrInstructions().split("\n");
+                        for (int i = 0; i < instructions.length; i++) {
+                            instructionsBuilder.append(i + 1).append(". ").append(instructions[i]).append("\n");
+                        }
+                        recipeInstructions.setText(instructionsBuilder.toString());
 
-    private void loadAuthorData() {
-        db.collection("users").document(recipe.getAuthorId())
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            author = document.toObject(User.class);
-                            updateAuthorUI();
+                        // Load recipe image
+                        if (recipe.getStrMealThumb() != null && !recipe.getStrMealThumb().isEmpty()) {
+                            Glide.with(this)
+                                    .load(recipe.getStrMealThumb())
+                                    .centerCrop()
+                                    .into(recipeImage);
                         }
+
+                        // Load author info
+                        if (recipe.getStrAuthor() != null) {
+                            userName.setText(recipe.getStrAuthor());
+                        }
+
+                        // Load author image if available
+                        if (recipe.getStrAuthorImage() != null && !recipe.getStrAuthorImage().isEmpty()) {
+                            Glide.with(this)
+                                    .load(recipe.getStrAuthorImage())
+                                    .centerCrop()
+                                    .into(userProfileImage);
+                        }
+
+                        // Check if current user is the author
+                        FirebaseAuth auth = FirebaseAuth.getInstance();
+                        if (auth.getCurrentUser() != null) {
+                            isAuthor = auth.getCurrentUser().getUid().equals(recipe.getUserId());
+                        }
+
+                        // Load comments
+                        loadComments();
                     }
                 });
     }
@@ -134,156 +161,96 @@ public class RecipeDetailActivity extends AppCompatActivity {
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
+                        Toast.makeText(this, "Error loading comments", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    comments.clear();
-                    for (DocumentSnapshot doc : value.getDocuments()) {
-                        Comment comment = doc.toObject(Comment.class);
-                        if (comment != null) {
+                    if (value != null) {
+                        comments.clear();
+                        for (DocumentSnapshot doc : value.getDocuments()) {
+                            Comment comment = new Comment();
                             comment.setId(doc.getId());
+                            comment.setUserId(doc.getString("userId"));
+                            comment.setText(doc.getString("text"));
+                            comment.setTimestamp(doc.getTimestamp("timestamp").toDate());
                             comments.add(comment);
                         }
+                        commentAdapter.updateComments(comments);
                     }
-                    commentAdapter.updateComments(comments);
                 });
-    }
-
-    private void updateUI() {
-        // Set recipe image
-        Glide.with(this)
-                .load(recipe.getImageUrl())
-                .placeholder(R.drawable.placeholder_image)
-                .error(R.drawable.error_image)
-                .into(recipeImage);
-
-        // Set recipe details
-        getSupportActionBar().setTitle(recipe.getTitle());
-        description.setText(recipe.getDescription());
-
-        // Format ingredients list
-        StringBuilder ingredientsBuilder = new StringBuilder();
-        for (String ingredient : recipe.getIngredients()) {
-            ingredientsBuilder.append("• ").append(ingredient).append("\n");
-        }
-        recipeIngredients.setText(ingredientsBuilder.toString());
-
-        // Format instructions
-        StringBuilder instructionsBuilder = new StringBuilder();
-        String[] instructions = recipe.getInstructions().split("\n");
-        for (int i = 0; i < instructions.length; i++) {
-            instructionsBuilder.append(i + 1).append(". ").append(instructions[i]).append("\n");
-        }
-        recipeInstructions.setText(instructionsBuilder.toString());
-
-        // Update favorite button state
-        updateFavoriteButtonState();
-    }
-
-    private void updateAuthorUI() {
-        if (author != null) {
-            userName.setText(author.getDisplayName());
-            Glide.with(this)
-                    .load(author.getProfileImageUrl())
-                    .placeholder(R.drawable.placeholder_image)
-                    .error(R.drawable.error_image)
-                    .circleCrop()
-                    .into(userProfileImage);
-        }
-    }
-
-    private void checkIfAuthor() {
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        isAuthor = currentUserId.equals(recipe.getAuthorId());
-        invalidateOptionsMenu();
-    }
-
-    private void setupFavoriteButton() {
-        favoriteButton.setOnClickListener(v -> {
-            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            if (recipe.isLiked()) {
-                // Remove from favorites
-                db.collection("users").document(userId)
-                        .collection("favorites")
-                        .document(recipeId)
-                        .delete()
-                        .addOnSuccessListener(aVoid -> {
-                            recipe.setLiked(false);
-                            updateFavoriteButtonState();
-                        });
-            } else {
-                // Add to favorites
-                db.collection("users").document(userId)
-                        .collection("favorites")
-                        .document(recipeId)
-                        .set(recipe)
-                        .addOnSuccessListener(aVoid -> {
-                            recipe.setLiked(true);
-                            updateFavoriteButtonState();
-                        });
-            }
-        });
-    }
-
-    private void updateFavoriteButtonState() {
-        if (recipe.isLiked()) {
-            favoriteButton.setImageResource(R.drawable.ic_favorite_24);
-        } else {
-            favoriteButton.setImageResource(R.drawable.ic_favorite_border_24);
-        }
     }
 
     private void setupCommentInput() {
         findViewById(R.id.postCommentButton).setOnClickListener(v -> {
             String commentText = commentInput.getText().toString().trim();
             if (!commentText.isEmpty()) {
-                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                Comment comment = new Comment(userId, commentText, System.currentTimeMillis());
-                
-                db.collection("recipes").document(recipeId)
-                        .collection("comments")
-                        .add(comment)
-                        .addOnSuccessListener(documentReference -> {
-                            commentInput.setText("");
-                        });
+                FirebaseAuth auth = FirebaseAuth.getInstance();
+                if (auth.getCurrentUser() != null) {
+                    String userId = auth.getCurrentUser().getUid();
+                    
+                    Map<String, Object> comment = new HashMap<>();
+                    comment.put("userId", userId);
+                    comment.put("text", commentText);
+                    comment.put("timestamp", new Timestamp(new Date()));
+                    
+                    db.collection("recipes").document(recipeId)
+                            .collection("comments")
+                            .add(comment)
+                            .addOnSuccessListener(documentReference -> {
+                                commentInput.setText("");
+                                Toast.makeText(this, "Comment posted successfully", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Error posting comment", Toast.LENGTH_SHORT).show();
+                            });
+                } else {
+                    Toast.makeText(this, "Please sign in to comment", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
 
-    private void shareRecipe() {
-        String shareText = String.format("%s\n\n%s\n\n%s\n\n%s",
-                recipe.getTitle(),
-                recipe.getDescription(),
-                getString(R.string.ingredients) + ":\n" + recipeIngredients.getText(),
-                getString(R.string.instructions) + ":\n" + recipeInstructions.getText());
+    private void setupFavoriteButton() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
+            String userId = auth.getCurrentUser().getUid();
+            
+            // Check if recipe is already favorited
+            db.collection("users").document(userId)
+                    .collection("favorites")
+                    .document(recipeId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        boolean isFavorited = documentSnapshot.exists();
+                        favoriteButton.setImageResource(isFavorited ? 
+                            R.drawable.ic_favorite : R.drawable.ic_favorite_border);
+                    });
 
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT, recipe.getTitle());
-        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_recipe)));
-    }
-
-    private void editRecipe() {
-        Intent intent = new Intent(this, EditRecipeActivity.class);
-        intent.putExtra("recipe_id", recipeId);
-        startActivity(intent);
-    }
-
-    private void deleteRecipe() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.delete_recipe)
-                .setMessage(R.string.delete_recipe_confirmation)
-                .setPositiveButton(R.string.delete, (dialog, which) -> {
-                    db.collection("recipes").document(recipeId)
-                            .delete()
-                            .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(this, R.string.recipe_deleted, Toast.LENGTH_SHORT).show();
-                                finish();
-                            });
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+            // Setup click listener
+            favoriteButton.setOnClickListener(v -> {
+                db.collection("users").document(userId)
+                        .collection("favorites")
+                        .document(recipeId)
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                // Remove from favorites
+                                documentSnapshot.getReference().delete()
+                                        .addOnSuccessListener(aVoid -> {
+                                            favoriteButton.setImageResource(R.drawable.ic_favorite_border);
+                                            Toast.makeText(this, "Removed from favorites", Toast.LENGTH_SHORT).show();
+                                        });
+                            } else {
+                                // Add to favorites
+                                documentSnapshot.getReference().set(recipe)
+                                        .addOnSuccessListener(aVoid -> {
+                                            favoriteButton.setImageResource(R.drawable.ic_favorite);
+                                            Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show();
+                                        });
+                            }
+                        });
+            });
+        }
     }
 
     @Override
@@ -311,5 +278,40 @@ public class RecipeDetailActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void shareRecipe() {
+        if (recipe != null) {
+            String shareText = recipe.getStrMeal() + "\n\n" +
+                    "Ingredients:\n" + String.join("\n", recipe.getIngredients()) + "\n\n" +
+                    "Instructions:\n" + recipe.getStrInstructions();
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+            startActivity(Intent.createChooser(shareIntent, "Share Recipe"));
+        }
+    }
+
+    private void editRecipe() {
+        Intent intent = new Intent(this, EditRecipeActivity.class);
+        intent.putExtra("recipe_id", recipeId);
+        startActivity(intent);
+    }
+
+    private void deleteRecipe() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.delete_recipe)
+                .setMessage(R.string.delete_recipe_confirmation)
+                .setPositiveButton(R.string.delete, (dialog, which) -> {
+                    db.collection("recipes").document(recipeId)
+                            .delete()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, R.string.recipe_deleted, Toast.LENGTH_SHORT).show();
+                                finish();
+                            });
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 } 

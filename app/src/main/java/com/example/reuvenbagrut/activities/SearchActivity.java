@@ -2,46 +2,31 @@ package com.example.reuvenbagrut.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.reuvenbagrut.R;
+import com.example.reuvenbagrut.Recipe;
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
-import com.example.reuvenbagrut.models.Recipe;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchActivity extends AppCompatActivity implements RecipeAdapter.OnRecipeClickListener {
     private TextInputEditText searchInput;
-    private RecyclerView recipesRecyclerView;
-    private ProgressBar progressBar;
-    private TextView emptyStateText;
+    private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
-    private List<Recipe> recipes;
+    private CircularProgressIndicator progressIndicator;
     private FirebaseFirestore db;
-    private ChipGroup filterChipGroup;
-    private String selectedDifficulty = null;
-    private String selectedTime = null;
+    private List<Recipe> searchResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,174 +37,67 @@ public class SearchActivity extends AppCompatActivity implements RecipeAdapter.O
         db = FirebaseFirestore.getInstance();
 
         // Initialize views
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(R.string.search_recipes);
 
         searchInput = findViewById(R.id.searchInput);
-        recipesRecyclerView = findViewById(R.id.recipesRecyclerView);
-        progressBar = findViewById(R.id.progressBar);
-        emptyStateText = findViewById(R.id.emptyStateText);
-        filterChipGroup = findViewById(R.id.filterChipGroup);
+        recyclerView = findViewById(R.id.searchResultsRecyclerView);
+        progressIndicator = findViewById(R.id.progressIndicator);
 
         // Setup RecyclerView
-        recipes = new ArrayList<>();
-        recipeAdapter = new RecipeAdapter(recipes, this);
-        recipesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recipesRecyclerView.setAdapter(recipeAdapter);
+        setupRecyclerView();
 
-        // Setup filter chips
-        setupFilterChips();
-
-        // Setup search input listener
-        searchInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String searchQuery = s.toString().trim();
-                if (searchQuery.length() >= 2) {
-                    searchRecipes(searchQuery);
-                } else {
-                    recipes.clear();
-                    recipeAdapter.updateRecipes(recipes);
-                    updateEmptyState();
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+        // Setup search button
+        findViewById(R.id.searchButton).setOnClickListener(v -> performSearch());
     }
 
-    private void setupFilterChips() {
-        // Difficulty filter
-        String[] difficulties = {"Easy", "Medium", "Hard"};
-        for (String difficulty : difficulties) {
-            Chip chip = new Chip(this);
-            chip.setText(difficulty);
-            chip.setCheckable(true);
-            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    selectedDifficulty = difficulty;
-                    // Uncheck other difficulty chips
-                    for (int i = 0; i < filterChipGroup.getChildCount(); i++) {
-                        View child = filterChipGroup.getChildAt(i);
-                        if (child instanceof Chip && child != buttonView) {
-                            ((Chip) child).setChecked(false);
-                        }
-                    }
-                } else {
-                    selectedDifficulty = null;
-                }
-                performSearch();
-            });
-            filterChipGroup.addView(chip);
-        }
-
-        // Time filter
-        String[] times = {"< 30 min", "30-60 min", "> 60 min"};
-        for (String time : times) {
-            Chip chip = new Chip(this);
-            chip.setText(time);
-            chip.setCheckable(true);
-            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    selectedTime = time;
-                    // Uncheck other time chips
-                    for (int i = 0; i < filterChipGroup.getChildCount(); i++) {
-                        View child = filterChipGroup.getChildAt(i);
-                        if (child instanceof Chip && child != buttonView) {
-                            ((Chip) child).setChecked(false);
-                        }
-                    }
-                } else {
-                    selectedTime = null;
-                }
-                performSearch();
-            });
-            filterChipGroup.addView(chip);
-        }
+    private void setupRecyclerView() {
+        searchResults = new ArrayList<>();
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        recipeAdapter = new RecipeAdapter(searchResults, this);
+        recyclerView.setAdapter(recipeAdapter);
     }
 
     private void performSearch() {
-        String searchQuery = searchInput.getText().toString().trim();
-        if (searchQuery.length() >= 2) {
-            searchRecipes(searchQuery);
+        String query = searchInput.getText().toString().trim().toLowerCase();
+        if (query.isEmpty()) {
+            searchInput.setError(getString(R.string.error_empty_search));
+            return;
         }
-    }
 
-    private void searchRecipes(String query) {
-        showLoading(true);
-        
-        Query firestoreQuery = db.collection("recipes")
-                .orderBy("title")
+        showProgress(true);
+        db.collection("recipes")
+                .orderBy("strMeal")
                 .startAt(query)
-                .endAt(query + "\uf8ff");
-
-        // Apply difficulty filter
-        if (selectedDifficulty != null) {
-            firestoreQuery = firestoreQuery.whereEqualTo("difficultyLevel", selectedDifficulty);
-        }
-
-        // Apply time filter
-        if (selectedTime != null) {
-            switch (selectedTime) {
-                case "< 30 min":
-                    firestoreQuery = firestoreQuery.whereLessThan("cookingTime", 30);
-                    break;
-                case "30-60 min":
-                    firestoreQuery = firestoreQuery.whereGreaterThanOrEqualTo("cookingTime", 30)
-                            .whereLessThanOrEqualTo("cookingTime", 60);
-                    break;
-                case "> 60 min":
-                    firestoreQuery = firestoreQuery.whereGreaterThan("cookingTime", 60);
-                    break;
-            }
-        }
-
-        firestoreQuery.limit(20)
+                .endAt(query + "\uf8ff")
                 .get()
                 .addOnCompleteListener(task -> {
-                    showLoading(false);
                     if (task.isSuccessful()) {
-                        recipes.clear();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
+                        List<Recipe> recipes = new ArrayList<>();
+                        task.getResult().forEach(document -> {
                             Recipe recipe = document.toObject(Recipe.class);
                             recipe.setId(document.getId());
                             recipes.add(recipe);
-                        }
+                        });
                         recipeAdapter.updateRecipes(recipes);
-                        updateEmptyState();
+                        showEmptyState(recipes.isEmpty());
                     } else {
-                        showError(task.getException());
+                        Toast.makeText(this, R.string.error_searching, Toast.LENGTH_SHORT).show();
                     }
+                    showProgress(false);
                 });
     }
 
-    private void showError(Exception exception) {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.error_title)
-                .setMessage(exception != null ? exception.getMessage() : getString(R.string.unknown_error))
-                .setPositiveButton(R.string.ok, null)
-                .show();
+    private void showProgress(boolean show) {
+        progressIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
-    private void showLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        recipesRecyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
-    }
-
-    private void updateEmptyState() {
-        if (recipes.isEmpty()) {
-            emptyStateText.setVisibility(View.VISIBLE);
-            recipesRecyclerView.setVisibility(View.GONE);
-        } else {
-            emptyStateText.setVisibility(View.GONE);
-            recipesRecyclerView.setVisibility(View.VISIBLE);
-        }
+    private void showEmptyState(boolean show) {
+        findViewById(R.id.emptyStateView).setVisibility(show ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
     @Override
@@ -230,35 +108,11 @@ public class SearchActivity extends AppCompatActivity implements RecipeAdapter.O
     }
 
     @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_search, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_clear_filters) {
-            clearFilters();
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void clearFilters() {
-        selectedDifficulty = null;
-        selectedTime = null;
-        for (int i = 0; i < filterChipGroup.getChildCount(); i++) {
-            View child = filterChipGroup.getChildAt(i);
-            if (child instanceof Chip) {
-                ((Chip) child).setChecked(false);
-            }
-        }
-        performSearch();
     }
 } 

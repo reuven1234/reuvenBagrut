@@ -22,7 +22,7 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     private OnRecipeClickListener listener;
 
     public interface OnRecipeClickListener {
-        void onRecipeClick(Recipe recipe, int position);
+        void onRecipeClick(Recipe recipe);
     }
 
     // Default constructor
@@ -32,9 +32,10 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     }
 
     // Constructor with initial list
-    public RecipeAdapter(List<Recipe> recipes) {
+    public RecipeAdapter(List<Recipe> recipes, OnRecipeClickListener listener) {
         this.recipes = recipes != null ? recipes : new ArrayList<>();
         this.allRecipes = new ArrayList<>(this.recipes);
+        this.listener = listener;
     }
 
     public void setOnRecipeClickListener(OnRecipeClickListener listener) {
@@ -120,7 +121,7 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onRecipeClick(recipes.get(position), position);
+                    listener.onRecipeClick(recipes.get(position));
                 }
             });
         }

@@ -162,7 +162,7 @@ public class EditRecipeActivity extends AppCompatActivity {
         recipe.setDescription(description);
         recipe.setIngredients(ingredients);
         recipe.setInstructions(instructions);
-        recipe.setCookingTime(cookingTime);
+        recipe.setCookingTime(String.valueOf(cookingTime));
         recipe.setDifficultyLevel(difficulty);
 
         showProgress(true);

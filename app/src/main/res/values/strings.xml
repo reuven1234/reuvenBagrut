@@ -27,7 +27,7 @@
     <!-- Home Fragment -->
     <string name="discover_recipes">Discover Recipes</string>
     <string name="find_favorite_recipes">Find your favorite recipes</string>
-    <string name="search_recipes_hint">Search recipes…</string>
+    <string name="search_recipes_hint">Search for recipes...</string>
     <string name="popular_recipes">Popular Recipes</string>
     <string name="no_recipes_found">No recipes found</string>
     <string name="no_recipes_available">No recipes available</string>
@@ -92,6 +92,17 @@
     <string name="error_switching_fragments">Error switching fragments</string>
     <string name="error_navigation_not_found">Navigation view not found</string>
     <string name="error_setting_default_fragment">Error setting default fragment</string>
+    <string name="error_loading_recipe">Error loading recipe</string>
+    <string name="error_required">This field is required</string>
+    <string name="error_invalid_number">Please enter a valid number</string>
+    <string name="error_updating_recipe">Error updating recipe</string>
+    <string name="recipe_updated">Recipe updated successfully</string>
+    <string name="recipe_deleted">Recipe deleted successfully</string>
+    <string name="delete_recipe_confirmation">Are you sure you want to delete this recipe?</string>
+    <string name="enter_search_query">Please enter a search query</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
     
     <!-- Success Messages -->
     <string name="recipe_added_success">Recipe added successfully</string>
@@ -126,4 +137,35 @@
     <string name="clear_filters">Clear Filters</string>
     <string name="error_title">Error</string>
     <string name="unknown_error">An unknown error occurred</string>
+    
+    <!-- Recipe Edit -->
+    <string name="recipe_title">Recipe Title</string>
+    <string name="recipe_description">Recipe Description</string>
+    <string name="cooking_time">Cooking Time</string>
+    <string name="difficulty_level">Difficulty Level</string>
+    <string name="save_recipe">Save Recipe</string>
+    
+    <!-- Search -->
+    <string name="no_results_found">No recipes found</string>
+    
+    <!-- Favorites -->
+    <string name="no_favorites">No favorite recipes yet</string>
+    
+    <!-- Notifications -->
+    <string name="no_notifications">No notifications</string>
+    
+    <!-- Navigation -->
+    <string name="home">Home</string>
+    <string name="favorites">Favorites</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+    <string name="recipe_details">Recipe Details</string>
+    <string name="user_profile">User Profile</string>
+    
+    <!-- New error messages -->
+    <string name="error_empty_search">Please enter a search term</string>
+    <string name="error_searching">Error searching recipes</string>
+    
+    <!-- New string resources -->
+    <string name="search">Search</string>
 </resources>

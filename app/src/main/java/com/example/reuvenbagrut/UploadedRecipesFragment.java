@@ -2,7 +2,6 @@ package com.example.reuvenbagrut;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,8 +28,9 @@ import java.util.List;
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
 import com.example.reuvenbagrut.activities.RecipeDetailActivity;
 
-public class UploadedRecipesFragment extends Fragment implements RecipeAdapter.OnRecipeClickListener {
-    private static final String TAG = "UploadedRecipesFragment";
+public class UploadedRecipesFragment extends Fragment
+        implements RecipeAdapter.OnRecipeClickListener {
+
     private RecyclerView recyclerView;
     private RecipeAdapter adapter;
     private List<Recipe> recipeList;
@@ -50,28 +50,29 @@ public class UploadedRecipesFragment extends Fragment implements RecipeAdapter.O
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                           @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_uploaded_recipes, container, false);
-        
-        // Initialize views
-        recyclerView = view.findViewById(R.id.uploadedRecipesRecyclerView);
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        shimmerLayout = view.findViewById(R.id.shimmerLayout);
-        emptyStateText = view.findViewById(R.id.emptyStateText);
-        
-        // Setup RecyclerView
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(
+                R.layout.fragment_uploaded_recipes, container, false
+        );
+
+        recyclerView        = view.findViewById(R.id.uploadedRecipesRecyclerView);
+        swipeRefreshLayout  = view.findViewById(R.id.swipeRefreshLayout);
+        shimmerLayout       = view.findViewById(R.id.shimmerLayout);
+        emptyStateText      = view.findViewById(R.id.emptyStateText);
+
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         adapter = new RecipeAdapter(recipeList, this);
         recyclerView.setAdapter(adapter);
-        
-        // Setup swipe refresh
-        swipeRefreshLayout.setColorSchemeResources(R.color.primary_color);
+
+        swipeRefreshLayout.setColorSchemeResources(
+                android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light
+        );
         swipeRefreshLayout.setOnRefreshListener(this::loadUploadedRecipes);
-        
-        // Load recipes
+
         loadUploadedRecipes();
-        
         return view;
     }
 
@@ -81,83 +82,60 @@ public class UploadedRecipesFragment extends Fragment implements RecipeAdapter.O
             return;
         }
 
-        showLoading(true);
-        
+        // Show shimmer
+        shimmerLayout.setVisibility(View.VISIBLE);
+        shimmerLayout.startShimmer();
+        recyclerView.setVisibility(View.GONE);
+        emptyStateText.setVisibility(View.GONE);
+
         db.collection("recipes")
-          .whereEqualTo("userId", currentUser.getUid())
-          .orderBy("timestamp", Query.Direction.DESCENDING)
-          .get()
-          .addOnCompleteListener(task -> {
-              if (task.isSuccessful() && isAdded()) {
-                  List<Recipe> recipes = new ArrayList<>();
-                  for (DocumentSnapshot document : task.getResult()) {
-                      Recipe recipe = document.toObject(Recipe.class);
-                      if (recipe != null) {
-                          recipe.setId(document.getId());
-                          recipes.add(recipe);
-                      }
-                  }
-                  updateRecipeList(recipes);
-              } else if (isAdded()) {
-                  showError(getString(R.string.error_loading_recipes));
-              }
-              showLoading(false);
-          });
+                .whereEqualTo("userId", currentUser.getUid())
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    shimmerLayout.stopShimmer();
+                    shimmerLayout.setVisibility(View.GONE);
+                    swipeRefreshLayout.setRefreshing(false);
+
+                    if (task.isSuccessful() && isAdded()) {
+                        List<Recipe> recipes = new ArrayList<>();
+                        for (DocumentSnapshot doc : task.getResult()) {
+                            Recipe r = doc.toObject(Recipe.class);
+                            if (r != null) {
+                                r.setId(doc.getId());
+                                recipes.add(r);
+                            }
+                        }
+                        updateRecipeList(recipes);
+                    } else if (isAdded()) {
+                        showError(getString(R.string.error_loading_recipes));
+                    }
+                });
     }
 
     private void updateRecipeList(List<Recipe> recipes) {
         recipeList.clear();
         recipeList.addAll(recipes);
         adapter.updateRecipes(recipes);
-        updateEmptyState(recipes.isEmpty());
+
+        boolean empty = recipes.isEmpty();
+        emptyStateText.setVisibility(empty ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(empty ? View.GONE : View.VISIBLE);
     }
 
-    private void updateEmptyState(boolean isEmpty) {
-        if (emptyStateText != null) {
-            emptyStateText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-            recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        }
-    }
-
-    private void showLoading(boolean show) {
-        if (swipeRefreshLayout != null) {
-            swipeRefreshLayout.setRefreshing(false);
-        }
-        
-        if (show) {
-            if (shimmerLayout != null) {
-                shimmerLayout.setVisibility(View.VISIBLE);
-                shimmerLayout.startShimmer();
-            }
-            if (recyclerView != null) {
-                recyclerView.setVisibility(View.GONE);
-            }
-            if (emptyStateText != null) {
-                emptyStateText.setVisibility(View.GONE);
-            }
-        } else {
-            if (shimmerLayout != null) {
-                shimmerLayout.stopShimmer();
-                shimmerLayout.setVisibility(View.GONE);
-            }
-            if (recyclerView != null) {
-                recyclerView.setVisibility(View.VISIBLE);
-            }
-        }
-    }
-
-    private void showError(String message) {
+    private void showError(String msg) {
         if (getView() != null) {
-            Snackbar.make(getView(), message, Snackbar.LENGTH_LONG)
-                .setAction(R.string.retry, v -> loadUploadedRecipes())
-                .show();
+            Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.retry, v -> loadUploadedRecipes())
+                    .show();
         }
     }
 
     @Override
     public void onRecipeClick(Recipe recipe) {
         if (getActivity() != null && recipe != null) {
-            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
+            Intent intent = new Intent(getActivity(),
+                    RecipeDetailActivity.class);
             intent.putExtra("recipe_id", recipe.getId());
             startActivity(intent);
         }
@@ -166,12 +144,8 @@ public class UploadedRecipesFragment extends Fragment implements RecipeAdapter.O
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (recyclerView != null) {
-            recyclerView.setAdapter(null);
-        }
+        recyclerView.setAdapter(null);
         adapter = null;
-        if (shimmerLayout != null) {
-            shimmerLayout.stopShimmer();
-        }
+        shimmerLayout.stopShimmer();
     }
 }

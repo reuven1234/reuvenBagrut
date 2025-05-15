@@ -3,6 +3,7 @@ package com.example.reuvenbagrut.activities;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +28,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -58,6 +60,11 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
         // Initialize Firebase
         db = FirebaseFirestore.getInstance();
+
+        // Log Firebase initialization
+        Log.d("RecipeDetailActivity", "Firebase initialized");
+        Log.d("RecipeDetailActivity", "Firebase app name: " + db.getApp().getName());
+        Log.d("RecipeDetailActivity", "Firebase project ID: " + db.getApp().getOptions().getProjectId());
 
         // Get recipe ID from intent
         recipeId = getIntent().getStringExtra("recipe_id");
@@ -98,14 +105,54 @@ public class RecipeDetailActivity extends AppCompatActivity {
     }
 
     private void loadRecipeData() {
-        db.collection("recipes").document(recipeId)
+        if (recipeId == null) {
+            showError("Recipe ID not found");
+            finish();
+            return;
+        }
+
+        showLoading(true);
+
+        try {
+            db.collection("recipes").document(recipeId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    recipe = documentSnapshot.toObject(Recipe.class);
-                    if (recipe != null) {
-                        // Set recipe data
-                        getSupportActionBar().setTitle(recipe.getStrMeal());
-                        description.setText(recipe.getStrInstructions());
+                    showLoading(false);
+                    
+                    if (!documentSnapshot.exists()) {
+                        showError("Recipe not found");
+                        finish();
+                        return;
+                    }
+                    
+                    try {
+                        // Create recipe object
+                        recipe = new Recipe();
+                        recipe.setId(documentSnapshot.getId());
+                        recipe.setStrMeal(documentSnapshot.getString("strMeal"));
+                        recipe.setStrCategory(documentSnapshot.getString("strCategory"));
+                        recipe.setStrInstructions(documentSnapshot.getString("strInstructions"));
+                        recipe.setStrMealThumb(documentSnapshot.getString("strMealThumb"));
+                        recipe.setStrAuthor(documentSnapshot.getString("strAuthor"));
+                        recipe.setStrAuthorImage(documentSnapshot.getString("strAuthorImage"));
+                        recipe.setUserId(documentSnapshot.getString("userId"));
+                        recipe.setTimestamp(documentSnapshot.getLong("timestamp"));
+                        
+                        // Handle ingredients list
+                        List<String> ingredients = (List<String>) documentSnapshot.get("ingredients");
+                        if (ingredients != null) {
+                            recipe.setIngredients(ingredients);
+                        }
+                        
+                        // Handle steps list
+                        List<String> steps = (List<String>) documentSnapshot.get("steps");
+                        if (steps != null) {
+                            recipe.setSteps(steps);
+                        }
+                        
+                        // Update UI
+                        collapsingToolbar.setTitle(recipe.getStrMeal());
+                        recipeCategory.setText(recipe.getStrCategory() != null ? recipe.getStrCategory() : "Uncategorized");
                         
                         // Format ingredients list
                         StringBuilder ingredientsBuilder = new StringBuilder();
@@ -134,30 +181,64 @@ public class RecipeDetailActivity extends AppCompatActivity {
                         if (recipe.getStrAuthor() != null) {
                             userName.setText(recipe.getStrAuthor());
                         }
-
-                        // Load author image if available
+                        
                         if (recipe.getStrAuthorImage() != null && !recipe.getStrAuthorImage().isEmpty()) {
                             Glide.with(this)
                                     .load(recipe.getStrAuthorImage())
-                                    .centerCrop()
+                                    .circleCrop()
                                     .into(userProfileImage);
                         }
-
-                        // Check if current user is the author
-                        FirebaseAuth auth = FirebaseAuth.getInstance();
-                        if (auth.getCurrentUser() != null) {
-                            isAuthor = auth.getCurrentUser().getUid().equals(recipe.getUserId());
-                        }
-
+                        
+                        // Check if user is the author
+                        isAuthor = currentUser != null && 
+                                 recipe.getUserId() != null && 
+                                 recipe.getUserId().equals(currentUser.getUid());
+                        
                         // Load comments
                         loadComments();
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing recipe data", e);
+                        showError("Error loading recipe data");
+                        finish();
                     }
+                })
+                .addOnFailureListener(e -> {
+                    showLoading(false);
+                    showError("Error loading recipe");
+                    finish();
                 });
+        } catch (Exception e) {
+            showLoading(false);
+            showError("Error loading recipe");
+            finish();
+        }
     }
 
     private void loadComments() {
-        db.collection("recipes").document(recipeId)
-                .collection("comments")
+        // First try to read from comments collection to test permissions
+        db.collection("comments")
+                .limit(1)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    Log.d("RecipeDetailActivity", "Successfully read from comments collection");
+                    Log.d("RecipeDetailActivity", "Number of documents: " + queryDocumentSnapshots.size());
+                    // Now load the actual comments
+                    loadRecipeComments();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("RecipeDetailActivity", "Error reading from comments collection: " + e.getMessage(), e);
+                    if (e instanceof FirebaseFirestoreException) {
+                        FirebaseFirestoreException fe = (FirebaseFirestoreException) e;
+                        Log.e("RecipeDetailActivity", "Error code: " + fe.getCode());
+                    }
+                    Toast.makeText(this, "Error loading comments: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void loadRecipeComments() {
+        db.collection("comments")
+                .whereEqualTo("recipeId", recipeId)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
@@ -182,31 +263,71 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
     private void setupCommentInput() {
         findViewById(R.id.postCommentButton).setOnClickListener(v -> {
-            String commentText = commentInput.getText().toString().trim();
-            if (!commentText.isEmpty()) {
-                FirebaseAuth auth = FirebaseAuth.getInstance();
-                if (auth.getCurrentUser() != null) {
-                    String userId = auth.getCurrentUser().getUid();
-                    
-                    Map<String, Object> comment = new HashMap<>();
-                    comment.put("userId", userId);
-                    comment.put("text", commentText);
-                    comment.put("timestamp", new Timestamp(new Date()));
-                    
-                    db.collection("recipes").document(recipeId)
-                            .collection("comments")
-                            .add(comment)
-                            .addOnSuccessListener(documentReference -> {
-                                commentInput.setText("");
-                                Toast.makeText(this, "Comment posted successfully", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(this, "Error posting comment", Toast.LENGTH_SHORT).show();
-                            });
-                } else {
-                    Toast.makeText(this, "Please sign in to comment", Toast.LENGTH_SHORT).show();
-                }
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            if (auth.getCurrentUser() == null) {
+                Log.e("RecipeDetailActivity", "User is not authenticated");
+                Toast.makeText(this, "Please sign in to comment", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            // Log authentication details
+            Log.d("RecipeDetailActivity", "Auth state: " + auth.getCurrentUser().toString());
+            Log.d("RecipeDetailActivity", "User ID: " + auth.getCurrentUser().getUid());
+            Log.d("RecipeDetailActivity", "User email: " + auth.getCurrentUser().getEmail());
+            Log.d("RecipeDetailActivity", "User display name: " + auth.getCurrentUser().getDisplayName());
+            Log.d("RecipeDetailActivity", "User is email verified: " + auth.getCurrentUser().isEmailVerified());
+
+            try {
+                String token = auth.getCurrentUser().getIdToken(false).getResult().getToken();
+                Log.d("RecipeDetailActivity", "Auth token: " + token);
+            } catch (Exception e) {
+                Log.e("RecipeDetailActivity", "Error getting auth token: " + e.getMessage(), e);
+            }
+
+            String commentText = commentInput.getText().toString().trim();
+            if (commentText.isEmpty()) {
+                Toast.makeText(this, "Please enter a comment", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String userId = auth.getCurrentUser().getUid();
+            String userName = auth.getCurrentUser().getDisplayName();
+            if (userName == null || userName.isEmpty()) {
+                userName = "Anonymous User";
+            }
+
+            // Debug logging
+            Log.d("RecipeDetailActivity", "Current user ID: " + userId);
+            Log.d("RecipeDetailActivity", "Recipe ID: " + recipeId);
+
+            // Create comment document with required fields
+            Map<String, Object> comment = new HashMap<>();
+            comment.put("userId", userId);  // Must match auth.uid
+            comment.put("userName", userName);
+            comment.put("text", commentText);
+            comment.put("timestamp", new Timestamp(new Date()));
+            comment.put("recipeId", recipeId);  // Must be a string
+            
+            // Debug logging
+            Log.d("RecipeDetailActivity", "Attempting to add comment with data: " + comment.toString());
+            
+            // Add comment to the comments collection
+            db.collection("comments")
+                    .add(comment)
+                    .addOnSuccessListener(documentReference -> {
+                        Log.d("RecipeDetailActivity", "Comment added successfully with ID: " + documentReference.getId());
+                        commentInput.setText("");
+                        Toast.makeText(this, "Comment posted successfully", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("RecipeDetailActivity", "Error adding comment: " + e.getMessage(), e);
+                        if (e instanceof FirebaseFirestoreException) {
+                            FirebaseFirestoreException fe = (FirebaseFirestoreException) e;
+                            Log.e("RecipeDetailActivity", "Error code: " + fe.getCode());
+                        }
+                        String errorMessage = "Error posting comment: " + e.getMessage();
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                    });
         });
     }
 

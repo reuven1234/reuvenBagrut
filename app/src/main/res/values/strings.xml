@@ -127,7 +127,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     
     <!-- Recipe strings -->
-    <string name="recipe_image">Recipe Image</string>
+    <string name="recipe_image">Recipe image</string>
     <string name="author_image">Author Image</string>
     <string name="retry">Retry</string>
     <string name="add_comment">Add a comment...</string>

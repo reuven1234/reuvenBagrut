@@ -4,115 +4,194 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.facebook.shimmer.ShimmerFrameLayout;
+import com.google.android.material.snackbar.Snackbar;
 import com.example.reuvenbagrut.R;
-import com.example.reuvenbagrut.Recipe;
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
+import com.example.reuvenbagrut.Recipe;
+import com.example.reuvenbagrut.RecipeDetailActivity;
+import com.example.reuvenbagrut.api.RetrofitClient;
+import com.example.reuvenbagrut.models.RecipeApiResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchActivity extends AppCompatActivity implements RecipeAdapter.OnRecipeClickListener {
-    private TextInputEditText searchInput;
+    private static final String API_KEY = "07194345ea6d4e2eaf7f93b9d974d285"; // Replace this with your actual Spoonacular API key
+
     private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
-    private CircularProgressIndicator progressIndicator;
-    private FirebaseFirestore db;
-    private List<Recipe> searchResults;
+    private SearchView searchView;
+    private ShimmerFrameLayout shimmerLayout;
+    private TextView emptyStateText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        // Initialize Firebase
-        db = FirebaseFirestore.getInstance();
-
-        // Initialize views
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle(R.string.search_recipes);
-
-        searchInput = findViewById(R.id.searchInput);
-        recyclerView = findViewById(R.id.searchResultsRecyclerView);
-        progressIndicator = findViewById(R.id.progressIndicator);
-
-        // Setup RecyclerView
+        setupToolbar();
+        initializeViews();
         setupRecyclerView();
+        setupSearchView();
+    }
 
-        // Setup search button
-        findViewById(R.id.searchButton).setOnClickListener(v -> performSearch());
+    private void setupToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.search_recipes);
+        }
+    }
+
+    private void initializeViews() {
+        recyclerView = findViewById(R.id.searchResultsRecyclerView);
+        searchView = findViewById(R.id.searchView);
+        shimmerLayout = findViewById(R.id.shimmerLayout);
+        emptyStateText = findViewById(R.id.emptyStateText);
     }
 
     private void setupRecyclerView() {
-        searchResults = new ArrayList<>();
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-        recipeAdapter = new RecipeAdapter(searchResults, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recipeAdapter = new RecipeAdapter();
+        recipeAdapter.setOnRecipeClickListener(this);
         recyclerView.setAdapter(recipeAdapter);
     }
 
-    private void performSearch() {
-        String query = searchInput.getText().toString().trim().toLowerCase();
-        if (query.isEmpty()) {
-            searchInput.setError(getString(R.string.error_empty_search));
-            return;
-        }
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (query != null && !query.trim().isEmpty()) {
+                    searchRecipes(query.trim());
+                }
+                return true;
+            }
 
-        showProgress(true);
-        db.collection("recipes")
-                .orderBy("strMeal")
-                .startAt(query)
-                .endAt(query + "\uf8ff")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<Recipe> recipes = new ArrayList<>();
-                        task.getResult().forEach(document -> {
-                            Recipe recipe = document.toObject(Recipe.class);
-                            recipe.setId(document.getId());
-                            recipes.add(recipe);
-                        });
-                        recipeAdapter.updateRecipes(recipes);
-                        showEmptyState(recipes.isEmpty());
-                    } else {
-                        Toast.makeText(this, R.string.error_searching, Toast.LENGTH_SHORT).show();
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText != null && newText.length() >= 3) {
+                    searchRecipes(newText.trim());
+                }
+                return true;
+            }
+        });
+    }
+
+    private void searchRecipes(String query) {
+        showLoading(true);
+
+        RetrofitClient.getInstance()
+                .getApiService()
+                .searchRecipes(API_KEY, query, 20, true)
+                .enqueue(new Callback<RecipeApiResponse>() {
+                    @Override
+                    public void onResponse(Call<RecipeApiResponse> call, Response<RecipeApiResponse> response) {
+                        showLoading(false);
+                        
+                        if (response.isSuccessful() && response.body() != null) {
+                            recipeAdapter.setRecipes(response.body().getResults());
+                            updateEmptyState(response.body().getResults().isEmpty());
+                        } else {
+                            showError(getString(R.string.error_searching));
+                        }
                     }
-                    showProgress(false);
+
+                    @Override
+                    public void onFailure(Call<RecipeApiResponse> call, Throwable t) {
+                        showLoading(false);
+                        showError(getString(R.string.error_searching));
+                    }
                 });
     }
 
-    private void showProgress(boolean show) {
-        progressIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
-        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+    private void updateEmptyState(boolean isEmpty) {
+        if (emptyStateText != null) {
+            emptyStateText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+            recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        }
     }
 
-    private void showEmptyState(boolean show) {
-        findViewById(R.id.emptyStateView).setVisibility(show ? View.VISIBLE : View.GONE);
-        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+    private void showLoading(boolean show) {
+        if (show) {
+            if (shimmerLayout != null) {
+                shimmerLayout.setVisibility(View.VISIBLE);
+                shimmerLayout.startShimmer();
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.GONE);
+            }
+            if (emptyStateText != null) {
+                emptyStateText.setVisibility(View.GONE);
+            }
+        } else {
+            if (shimmerLayout != null) {
+                shimmerLayout.stopShimmer();
+                shimmerLayout.setVisibility(View.GONE);
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void showError(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
 
     @Override
-    public void onRecipeClick(Recipe recipe) {
-        Intent intent = new Intent(this, RecipeDetailActivity.class);
-        intent.putExtra("recipe_id", recipe.getId());
-        startActivity(intent);
+    public void onRecipeClick(Object recipe) {
+        if (recipe instanceof Recipe) {
+            navigateToRecipeDetail((Recipe) recipe);
+        } else if (recipe instanceof RecipeApiResponse.RecipeResult) {
+            navigateToRecipeDetail((RecipeApiResponse.RecipeResult) recipe);
+        }
+    }
+
+    private void navigateToRecipeDetail(Recipe recipe) {
+        if (recipe != null) {
+            Intent intent = new Intent(this, RecipeDetailActivity.class);
+            intent.putExtra("recipe_id", recipe.getId());
+            startActivity(intent);
+        }
+    }
+
+    private void navigateToRecipeDetail( RecipeApiResponse.RecipeResult recipe) {
+        if (recipe != null) {
+            Intent intent = new Intent(this, RecipeDetailActivity.class);
+            intent.putExtra("recipe_id", String.valueOf(recipe.getId()));
+            intent.putExtra("is_api_recipe", true);
+            startActivity(intent);
+        }
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (recyclerView != null) {
+            recyclerView.setAdapter(null);
+        }
+        recipeAdapter = null;
+        if (shimmerLayout != null) {
+            shimmerLayout.stopShimmer();
+        }
     }
 } 

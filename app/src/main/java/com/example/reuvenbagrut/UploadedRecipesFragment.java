@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -62,8 +63,9 @@ public class UploadedRecipesFragment extends Fragment
         shimmerLayout       = view.findViewById(R.id.shimmerLayout);
         emptyStateText      = view.findViewById(R.id.emptyStateText);
 
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        adapter = new RecipeAdapter(recipeList, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new RecipeAdapter();
+        adapter.setOnRecipeClickListener(this);
         recyclerView.setAdapter(adapter);
 
         swipeRefreshLayout.setColorSchemeResources(
@@ -132,10 +134,15 @@ public class UploadedRecipesFragment extends Fragment
     }
 
     @Override
-    public void onRecipeClick(Recipe recipe) {
-        if (getActivity() != null && recipe != null) {
-            Intent intent = new Intent(getActivity(),
-                    RecipeDetailActivity.class);
+    public void onRecipeClick(Object recipe) {
+        if (recipe instanceof Recipe) {
+            navigateToRecipeDetail((Recipe) recipe);
+        }
+    }
+
+    private void navigateToRecipeDetail(Recipe recipe) {
+        if (recipe != null) {
+            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
             intent.putExtra("recipe_id", recipe.getId());
             startActivity(intent);
         }

@@ -11,38 +11,40 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
 
-public class LikedRecipesFragment extends Fragment
-        implements RecipeAdapter.OnRecipeClickListener {
+public class LikedRecipesFragment extends Fragment implements RecipeAdapter.OnRecipeClickListener {
 
     private RecyclerView recyclerView;
     private RecipeAdapter adapter;
-    private List<Recipe> recipeList;
-    private FirebaseFirestore db;
-    private FirebaseUser currentUser;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private ShimmerFrameLayout shimmerLayout;
     private TextView emptyStateText;
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private ProgressBar progressBar;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = FirebaseFirestore.getInstance();
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        recipeList = new ArrayList<>();
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
     }
 
     @Nullable
@@ -54,79 +56,139 @@ public class LikedRecipesFragment extends Fragment
                 R.layout.fragment_liked_recipes, container, false
         );
 
-        // Bind views
-        recyclerView    = view.findViewById(R.id.likedRecipesRecyclerView);
-        emptyStateText  = view.findViewById(R.id.emptyStateText);
-        progressBar     = view.findViewById(R.id.progressBar);
-
-        // Recycler setup
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        adapter = new RecipeAdapter(recipeList, this);
-        recyclerView.setAdapter(adapter);
-
-        // Load data
+        initializeViews(view);
+        setupRecyclerView();
+        setupSwipeRefresh();
         loadLikedRecipes();
+
         return view;
     }
 
+    private void initializeViews(View view) {
+        recyclerView = view.findViewById(R.id.likedRecipesRecyclerView);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        shimmerLayout = view.findViewById(R.id.shimmerLayout);
+        emptyStateText = view.findViewById(R.id.emptyStateText);
+        progressBar = view.findViewById(R.id.progressBar);
+        
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+    }
+
+    private void setupRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new RecipeAdapter();
+        adapter.setOnRecipeClickListener(this);
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setColorSchemeResources(R.color.primary_color);
+        swipeRefreshLayout.setOnRefreshListener(this::loadLikedRecipes);
+    }
+
     private void loadLikedRecipes() {
-        if (currentUser == null) {
+        showLoading(true);
+        
+        String userId = currentUser != null ? currentUser.getUid() : null;
+        if (userId == null) {
             showError(getString(R.string.error_not_authenticated));
+            showLoading(false);
             return;
         }
 
-        // Show loader
-        progressBar.setVisibility(View.VISIBLE);
-        emptyStateText.setVisibility(View.GONE);
-        recyclerView.setVisibility(View.GONE);
-
         db.collection("users")
-                .document(currentUser.getUid())
-                .collection("favorites")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
-                .addOnCompleteListener(task -> {
-                    progressBar.setVisibility(View.GONE);
-
-                    if (task.isSuccessful() && isAdded()) {
-                        List<Recipe> recipes = new ArrayList<>();
-                        for (DocumentSnapshot doc : task.getResult()) {
-                            Recipe r = doc.toObject(Recipe.class);
-                            if (r != null) {
-                                r.setId(doc.getId());
-                                recipes.add(r);
-                            }
-                        }
-                        updateRecipeList(recipes);
-                    } else if (isAdded()) {
-                        showError(getString(R.string.error_loading_recipes));
-                    }
-                });
+          .document(userId)
+          .collection("liked_recipes")
+          .get()
+          .addOnCompleteListener(task -> {
+              if (task.isSuccessful() && isAdded()) {
+                  List<Recipe> likedRecipes = new ArrayList<>();
+                  
+                  for (QueryDocumentSnapshot document : task.getResult()) {
+                      try {
+                          Recipe recipe = document.toObject(Recipe.class);
+                          recipe.setId(document.getId());
+                          likedRecipes.add(recipe);
+                      } catch (Exception e) {
+                          // Handle error
+                      }
+                  }
+                  
+                  updateRecipeList(likedRecipes);
+                  showLoading(false);
+              } else if (isAdded()) {
+                  showError(getString(R.string.error_loading_recipes));
+                  showLoading(false);
+              }
+          })
+          .addOnFailureListener(e -> {
+              if (isAdded()) {
+                  showError(getString(R.string.error_loading_recipes));
+                  showLoading(false);
+              }
+          });
     }
 
     private void updateRecipeList(List<Recipe> recipes) {
-        recipeList.clear();
-        recipeList.addAll(recipes);
-        adapter.updateRecipes(recipes);
-
-        boolean empty = recipes.isEmpty();
-        emptyStateText.setVisibility(empty ? View.VISIBLE : View.GONE);
-        recyclerView.setVisibility(empty ? View.GONE : View.VISIBLE);
+        if (adapter != null) {
+            adapter.updateRecipes(recipes);
+            updateEmptyState(recipes.isEmpty());
+        }
     }
 
-    private void showError(String msg) {
+    private void updateEmptyState(boolean isEmpty) {
+        if (emptyStateText != null) {
+            emptyStateText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+            recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    private void showLoading(boolean show) {
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(false);
+        }
+        
+        if (show) {
+            if (shimmerLayout != null) {
+                shimmerLayout.setVisibility(View.VISIBLE);
+                shimmerLayout.startShimmer();
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.GONE);
+            }
+            if (emptyStateText != null) {
+                emptyStateText.setVisibility(View.GONE);
+            }
+        } else {
+            if (shimmerLayout != null) {
+                shimmerLayout.stopShimmer();
+                shimmerLayout.setVisibility(View.GONE);
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void showError(String message) {
         if (getView() != null) {
-            Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.retry, v -> loadLikedRecipes())
-                    .show();
+            Snackbar.make(getView(), message, Snackbar.LENGTH_LONG)
+                .setAction(R.string.retry, v -> loadLikedRecipes())
+                .show();
         }
     }
 
     @Override
-    public void onRecipeClick(Recipe recipe) {
+    public void onRecipeClick(Object recipe) {
+        if (recipe instanceof Recipe) {
+            navigateToRecipeDetail((Recipe) recipe);
+        }
+    }
+
+    private void navigateToRecipeDetail(Recipe recipe) {
         if (getActivity() != null && recipe != null) {
-            Intent intent = new Intent(getActivity(),
-                    RecipeDetailActivity.class);
+            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
             intent.putExtra("recipe_id", recipe.getId());
             startActivity(intent);
         }
@@ -135,7 +197,12 @@ public class LikedRecipesFragment extends Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        recyclerView.setAdapter(null);
+        if (recyclerView != null) {
+            recyclerView.setAdapter(null);
+        }
         adapter = null;
+        if (shimmerLayout != null) {
+            shimmerLayout.stopShimmer();
+        }
     }
 }

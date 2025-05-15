@@ -26,11 +26,20 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.Query;
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
 import com.example.reuvenbagrut.Recipe;
+import com.example.reuvenbagrut.api.RetrofitClient;
+import com.example.reuvenbagrut.models.RecipeApiResponse;
+import com.example.reuvenbagrut.models.RecipeApiResponse.RecipeResult;
+import com.example.reuvenbagrut.activities.RecipeDetailActivity;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import android.widget.Toast;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements RecipeAdapter.OnRecipeClickListener {
     private static final String TAG = "HomeFragment";
     private static final String KEY_SELECTED_CATEGORY = "selected_category";
     private static final int GRID_SPAN_COUNT = 2;
+    private static final String API_KEY = "07194345ea6d4e2eaf7f93b9d974d285"; // Replace this with your actual Spoonacular API key
 
     private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
@@ -45,46 +54,22 @@ public class HomeFragment extends Fragment {
     
     private FirebaseUser currentUser;
     private String selectedCategory = "All";
-    private List<Recipe> recipes = new ArrayList<>();
-
-    public HomeFragment() {
-        // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        
-        if (savedInstanceState != null) {
-            selectedCategory = savedInstanceState.getString(KEY_SELECTED_CATEGORY, "All");
-        }
-    }
+    private boolean isSearching = false;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         
-        // Initialize views
         initializeViews(view);
-        
-        // Setup RecyclerView
         setupRecyclerView();
-        
-        // Setup search view
         setupSearchView();
-        
-        // Setup swipe refresh
         setupSwipeRefresh();
-        
-        // Setup category chips
         setupCategoryChips();
         
-        // Load recipes
-        loadRecipes();
+        if (!isSearching) {
+            loadRecipes();
+        }
         
         return view;
     }
@@ -97,25 +82,21 @@ public class HomeFragment extends Fragment {
         categoryChipGroup = view.findViewById(R.id.categoryChipGroup);
         shimmerLayout = view.findViewById(R.id.shimmerLayout);
         emptyStateText = view.findViewById(R.id.emptyStateText);
+        
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
     }
 
     private void setupRecyclerView() {
-        if (recyclerView == null) return;
-        
-        // Use a GridLayoutManager with proper configuration
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), GRID_SPAN_COUNT);
         recyclerView.setLayoutManager(layoutManager);
-        
-        // Important: disable nested scrolling to prevent conflict with NestedScrollView
         recyclerView.setNestedScrollingEnabled(false);
-        recyclerView.setHasFixedSize(false); // Allow dynamic sizing
-        recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER); // Disable overscroll effect in the RecyclerView
+        recyclerView.setHasFixedSize(false);
+        recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         
-        // Setup adapter
-        recipeAdapter = new RecipeAdapter(recipes, recipe -> {
-            // Handle recipe click
-            navigateToRecipeDetail(recipe);
-        });
+        recipeAdapter = new RecipeAdapter();
+        recipeAdapter.setOnRecipeClickListener(this);
         recyclerView.setAdapter(recipeAdapter);
     }
 
@@ -123,44 +104,59 @@ public class HomeFragment extends Fragment {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                return false;
+                if (query != null && !query.trim().isEmpty()) {
+                    isSearching = true;
+                    searchRecipes(query.trim());
+                }
+                return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (recipeAdapter != null) {
-                    recipeAdapter.getFilter().filter(newText);
-                    return true;
+                if (newText != null && newText.length() >= 3) {
+                    isSearching = true;
+                    searchRecipes(newText.trim());
+                } else if (newText == null || newText.isEmpty()) {
+                    isSearching = false;
+                    loadRecipes();
                 }
-                return false;
+                return true;
             }
         });
     }
 
     private void setupSwipeRefresh() {
         swipeRefreshLayout.setColorSchemeResources(R.color.primary_color);
-        swipeRefreshLayout.setOnRefreshListener(this::loadRecipes);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (isSearching) {
+                String currentQuery = searchView.getQuery().toString();
+                if (!currentQuery.isEmpty()) {
+                    searchRecipes(currentQuery);
+                }
+            } else {
+                loadRecipes();
+            }
+        });
     }
 
     private void setupCategoryChips() {
         categoryChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == View.NO_ID) return;
             
-            // Get the selected chip
             com.google.android.material.chip.Chip chip = group.findViewById(checkedId);
             if (chip != null) {
                 selectedCategory = chip.getText().toString();
-                loadRecipes();
+                if (!isSearching) {
+                    loadRecipes();
+                }
             }
         });
 
-        // Set initial selection
         categoryChipGroup.check(getCategoryChipId(selectedCategory));
     }
 
     private void loadRecipes() {
         showLoading(true);
-        Log.d(TAG, "Starting to load recipes...");
         
         db.collection("recipes")
           .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -168,55 +164,87 @@ public class HomeFragment extends Fragment {
           .addOnCompleteListener(task -> {
               if (task.isSuccessful() && isAdded()) {
                   List<Recipe> recipes = new ArrayList<>();
-                  Log.d(TAG, "Query successful. Document count: " + task.getResult().size());
                   
                   for (QueryDocumentSnapshot document : task.getResult()) {
                       try {
-                          Log.d(TAG, "Processing document: " + document.getId());
-                          Recipe recipe = document.toObject(Recipe.class);
+                          Recipe recipe = new Recipe();
                           recipe.setId(document.getId());
-                          Log.d(TAG, "Recipe data - Title: " + recipe.getStrMeal() + 
-                                    ", Category: " + recipe.getStrCategory());
+                          recipe.setStrMeal(document.getString("strMeal"));
+                          recipe.setStrCategory(document.getString("strCategory"));
+                          recipe.setStrInstructions(document.getString("strInstructions"));
+                          recipe.setStrMealThumb(document.getString("strMealThumb"));
+                          recipe.setStrAuthor(document.getString("strAuthor"));
+                          recipe.setStrAuthorImage(document.getString("strAuthorImage"));
+                          recipe.setUserId(document.getString("userId"));
+                          recipe.setTimestamp(document.getLong("timestamp"));
                           
-                          // Only add recipes that match the selected category or if "All" is selected
+                          // Handle ingredients list
+                          List<String> ingredients = (List<String>) document.get("ingredients");
+                          if (ingredients != null) {
+                              recipe.setIngredients(ingredients);
+                          }
+                          
+                          // Handle steps list
+                          List<String> steps = (List<String>) document.get("steps");
+                          if (steps != null) {
+                              recipe.setSteps(steps);
+                          }
+                          
                           if (selectedCategory.equals("All") || 
                               (recipe.getStrCategory() != null && recipe.getStrCategory().equals(selectedCategory))) {
                               recipes.add(recipe);
-                              Log.d(TAG, "Added recipe to list");
-                          } else {
-                              Log.d(TAG, "Recipe skipped - category mismatch. Selected: " + selectedCategory);
                           }
                       } catch (Exception e) {
                           Log.e(TAG, "Error parsing recipe: " + e.getMessage(), e);
                       }
                   }
                   
-                  Log.d(TAG, "Final recipes list size: " + recipes.size());
                   updateRecipeList(recipes);
                   showLoading(false);
               } else if (isAdded()) {
-                  Log.e(TAG, "Error loading recipes: " + 
-                        (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                   showError(getString(R.string.error_loading_recipes));
                   showLoading(false);
               }
           })
           .addOnFailureListener(e -> {
               if (isAdded()) {
-                  Log.e(TAG, "Error loading recipes", e);
                   showError(getString(R.string.error_loading_recipes));
                   showLoading(false);
               }
           });
     }
 
+    private void searchRecipes(String query) {
+        showLoading(true);
+        
+        RetrofitClient.getInstance()
+                .getApiService()
+                .searchRecipes(API_KEY, query, 20, true)
+                .enqueue(new Callback<RecipeApiResponse>() {
+                    @Override
+                    public void onResponse(Call<RecipeApiResponse> call, Response<RecipeApiResponse> response) {
+                        showLoading(false);
+                        
+                        if (response.isSuccessful() && response.body() != null) {
+                            recipeAdapter.setRecipes(response.body().getResults());
+                            updateEmptyState(response.body().getResults().isEmpty());
+                        } else {
+                            showError(getString(R.string.error_searching));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<RecipeApiResponse> call, Throwable t) {
+                        showLoading(false);
+                        showError(getString(R.string.error_searching));
+                    }
+                });
+    }
+
     private void updateRecipeList(List<Recipe> recipes) {
         if (recipeAdapter != null) {
-            Log.d(TAG, "Updating adapter with " + recipes.size() + " recipes");
             recipeAdapter.updateRecipes(recipes);
             updateEmptyState(recipes.isEmpty());
-        } else {
-            Log.e(TAG, "RecipeAdapter is null!");
         }
     }
 
@@ -257,15 +285,42 @@ public class HomeFragment extends Fragment {
     private void showError(String message) {
         if (getView() != null) {
             Snackbar.make(getView(), message, Snackbar.LENGTH_LONG)
-                .setAction(R.string.retry, v -> loadRecipes())
+                .setAction(R.string.retry, v -> {
+                    if (isSearching) {
+                        String currentQuery = searchView.getQuery().toString();
+                        if (!currentQuery.isEmpty()) {
+                            searchRecipes(currentQuery);
+                        }
+                    } else {
+                        loadRecipes();
+                    }
+                })
                 .show();
         }
     }
 
+    @Override
+    public void onRecipeClick(Object recipe) {
+        if (recipe instanceof Recipe) {
+            navigateToRecipeDetail((Recipe) recipe);
+        } else if (recipe instanceof RecipeApiResponse.RecipeResult) {
+            navigateToRecipeDetail((RecipeApiResponse.RecipeResult) recipe);
+        }
+    }
+
     private void navigateToRecipeDetail(Recipe recipe) {
-        if (getActivity() != null && recipe != null) {
+        if (recipe != null) {
             Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
             intent.putExtra("recipe_id", recipe.getId());
+            startActivity(intent);
+        }
+    }
+
+    private void navigateToRecipeDetail(RecipeApiResponse.RecipeResult recipe) {
+        if (recipe != null) {
+            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
+            intent.putExtra("recipe_id", String.valueOf(recipe.getId()));
+            intent.putExtra("is_api_recipe", true);
             startActivity(intent);
         }
     }
@@ -289,7 +344,6 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Clean up any resources
         if (recyclerView != null) {
             recyclerView.setAdapter(null);
         }

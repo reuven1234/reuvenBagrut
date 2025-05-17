@@ -1,174 +1,83 @@
 package com.example.reuvenbagrut;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Filter;
-import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.request.RequestOptions;
+import com.example.reuvenbagrut.models.RecipeApiResponse.RecipeResult;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> implements Filterable {
+public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
+    private List<RecipeResult> recipes;
+    private Context context;
 
-    private List<Recipe> recipes = new ArrayList<>();
-    private List<Recipe> allRecipes = new ArrayList<>();
-    private OnRecipeClickListener listener;
-
-    public interface OnRecipeClickListener {
-        void onRecipeClick(Recipe recipe);
-    }
-
-    // Default constructor
-    public RecipeAdapter() {
+    public RecipeAdapter(Context context) {
+        this.context = context;
         this.recipes = new ArrayList<>();
-        this.allRecipes = new ArrayList<>();
-    }
-
-    // Constructor with initial list
-    public RecipeAdapter(List<Recipe> recipes, OnRecipeClickListener listener) {
-        this.recipes = recipes != null ? recipes : new ArrayList<>();
-        this.allRecipes = new ArrayList<>(this.recipes);
-        this.listener = listener;
-    }
-
-    public void setOnRecipeClickListener(OnRecipeClickListener listener) {
-        this.listener = listener;
-    }
-
-    public void setRecipes(List<Recipe> recipes) {
-        this.recipes = recipes != null ? recipes : new ArrayList<>();
-        this.allRecipes = new ArrayList<>(this.recipes);
-        notifyDataSetChanged();
-    }
-
-    // Alias for setRecipes for compatibility
-    public void setRecipeList(List<Recipe> recipes) {
-        setRecipes(recipes);
     }
 
     @NonNull
     @Override
     public RecipeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_recipe, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_recipe, parent, false);
         return new RecipeViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecipeViewHolder holder, int position) {
-        Recipe recipe = recipes.get(position);
-        holder.bind(recipe);
+        RecipeResult recipe = recipes.get(position);
+        holder.titleTextView.setText(recipe.getTitle());
+        
+        // Load image using Glide
+        Glide.with(context)
+            .load(recipe.getImageUrl())
+            .placeholder(R.drawable.placeholder_recipe)
+            .error(R.drawable.placeholder_recipe)
+            .into(holder.imageView);
+
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, RecipeDetailActivity.class);
+            intent.putExtra("recipe_id", recipe.getId());
+            intent.putExtra("recipe_title", recipe.getTitle());
+            intent.putExtra("recipe_image", recipe.getImageUrl());
+            intent.putExtra("recipe_category", recipe.getStrCategory());
+            intent.putExtra("recipe_instructions", recipe.getStrInstructions());
+            context.startActivity(intent);
+        });
     }
 
     @Override
     public int getItemCount() {
-        return recipes != null ? recipes.size() : 0;
+        return recipes.size();
     }
 
-    @Override
-    public Filter getFilter() {
-        return new Filter() {
-            @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
-                List<Recipe> filteredList = new ArrayList<>();
-                if (constraint == null || constraint.length() == 0) {
-                    filteredList.addAll(allRecipes);
-                } else {
-                    String filterPattern = constraint.toString().toLowerCase().trim();
-                    for (Recipe recipe : allRecipes) {
-                        if (recipe.getStrMeal().toLowerCase().contains(filterPattern)) {
-                            filteredList.add(recipe);
-                        }
-                    }
-                }
-
-                FilterResults results = new FilterResults();
-                results.values = filteredList;
-                return results;
-            }
-
-            @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
-                recipes.clear();
-                recipes.addAll((List) results.values);
-                notifyDataSetChanged();
-            }
-        };
+    public void setRecipes(List<RecipeResult> recipes) {
+        this.recipes = recipes;
+        notifyDataSetChanged();
     }
 
-    class RecipeViewHolder extends RecyclerView.ViewHolder {
-        private ImageView recipeImage;
-        private TextView recipeName;
-        private TextView recipeCategory;
-        private TextView authorName;
-        private ImageView authorImage;
+    public void addRecipes(List<RecipeResult> newRecipes) {
+        int startPosition = recipes.size();
+        recipes.addAll(newRecipes);
+        notifyItemRangeInserted(startPosition, newRecipes.size());
+    }
+
+    static class RecipeViewHolder extends RecyclerView.ViewHolder {
+        ImageView imageView;
+        TextView titleTextView;
 
         RecipeViewHolder(@NonNull View itemView) {
             super(itemView);
-            recipeImage = itemView.findViewById(R.id.recipeImage);
-            recipeName = itemView.findViewById(R.id.recipeTitle);
-            recipeCategory = itemView.findViewById(R.id.recipeCategory);
-            authorName = itemView.findViewById(R.id.authorName);
-            authorImage = itemView.findViewById(R.id.authorImage);
-
-            itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onRecipeClick(recipes.get(position));
-                }
-            });
-        }
-
-        void bind(Recipe recipe) {
-            recipeName.setText(recipe.getStrMeal());
-            
-            if (recipe.getStrCategory() != null) {
-                recipeCategory.setText(recipe.getStrCategory());
-                recipeCategory.setVisibility(View.VISIBLE);
-            } else {
-                recipeCategory.setVisibility(View.GONE);
-            }
-            
-            if (recipe.getStrAuthor() != null) {
-                authorName.setText(recipe.getStrAuthor());
-                authorName.setVisibility(View.VISIBLE);
-            } else {
-                authorName.setVisibility(View.GONE);
-            }
-            
-            // Load recipe image
-            if (recipe.getStrMealThumb() != null && !recipe.getStrMealThumb().isEmpty()) {
-                Glide.with(recipeImage.getContext())
-                    .load(recipe.getStrMealThumb())
-                    .apply(new RequestOptions()
-                        .placeholder(R.drawable.placeholder_image)
-                        .error(R.drawable.placeholder_image))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(recipeImage);
-            } else {
-                recipeImage.setImageResource(R.drawable.placeholder_image);
-            }
-            
-            // Load author image
-            if (recipe.getStrAuthorImage() != null && !recipe.getStrAuthorImage().isEmpty()) {
-                Glide.with(authorImage.getContext())
-                    .load(recipe.getStrAuthorImage())
-                    .apply(new RequestOptions()
-                        .placeholder(R.drawable.avatar_placeholder)
-                        .error(R.drawable.avatar_placeholder)
-                        .circleCrop())
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(authorImage);
-            } else {
-                authorImage.setImageResource(R.drawable.avatar_placeholder);
-            }
+            imageView = itemView.findViewById(R.id.recipe_image);
+            titleTextView = itemView.findViewById(R.id.recipe_title);
         }
     }
 }

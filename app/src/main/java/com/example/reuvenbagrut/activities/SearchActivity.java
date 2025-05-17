@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
@@ -24,7 +25,7 @@ import retrofit2.Response;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchActivity extends AppCompatActivity implements RecipeAdapter.OnRecipeClickListener {
+public class SearchActivity extends AppCompatActivity {
     private static final String API_KEY = "07194345ea6d4e2eaf7f93b9d974d285"; // Replace this with your actual Spoonacular API key
 
     private RecyclerView recyclerView;
@@ -62,8 +63,7 @@ public class SearchActivity extends AppCompatActivity implements RecipeAdapter.O
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recipeAdapter = new RecipeAdapter();
-        recipeAdapter.setOnRecipeClickListener(this);
+        recipeAdapter = new RecipeAdapter(this);
         recyclerView.setAdapter(recipeAdapter);
     }
 
@@ -92,17 +92,19 @@ public class SearchActivity extends AppCompatActivity implements RecipeAdapter.O
 
         RetrofitClient.getInstance()
                 .getApiService()
-                .searchRecipes(API_KEY, query, 20, true)
+                .searchRecipes(query)
                 .enqueue(new Callback<RecipeApiResponse>() {
                     @Override
                     public void onResponse(Call<RecipeApiResponse> call, Response<RecipeApiResponse> response) {
                         showLoading(false);
                         
                         if (response.isSuccessful() && response.body() != null) {
-                            recipeAdapter.setRecipes(response.body().getResults());
-                            updateEmptyState(response.body().getResults().isEmpty());
+                            recipeAdapter.setRecipes(response.body().getMeals());
+                            if (response.body().getMeals() == null || response.body().getMeals().isEmpty()) {
+                                Toast.makeText(SearchActivity.this, "No recipes found", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            showError(getString(R.string.error_searching));
+                            Toast.makeText(SearchActivity.this, "Error searching recipes", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -112,13 +114,6 @@ public class SearchActivity extends AppCompatActivity implements RecipeAdapter.O
                         showError(getString(R.string.error_searching));
                     }
                 });
-    }
-
-    private void updateEmptyState(boolean isEmpty) {
-        if (emptyStateText != null) {
-            emptyStateText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-            recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        }
     }
 
     private void showLoading(boolean show) {
@@ -146,32 +141,6 @@ public class SearchActivity extends AppCompatActivity implements RecipeAdapter.O
 
     private void showError(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onRecipeClick(Object recipe) {
-        if (recipe instanceof Recipe) {
-            navigateToRecipeDetail((Recipe) recipe);
-        } else if (recipe instanceof RecipeApiResponse.RecipeResult) {
-            navigateToRecipeDetail((RecipeApiResponse.RecipeResult) recipe);
-        }
-    }
-
-    private void navigateToRecipeDetail(Recipe recipe) {
-        if (recipe != null) {
-            Intent intent = new Intent(this, RecipeDetailActivity.class);
-            intent.putExtra("recipe_id", recipe.getId());
-            startActivity(intent);
-        }
-    }
-
-    private void navigateToRecipeDetail( RecipeApiResponse.RecipeResult recipe) {
-        if (recipe != null) {
-            Intent intent = new Intent(this, RecipeDetailActivity.class);
-            intent.putExtra("recipe_id", String.valueOf(recipe.getId()));
-            intent.putExtra("is_api_recipe", true);
-            startActivity(intent);
-        }
     }
 
     @Override

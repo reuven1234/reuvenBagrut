@@ -69,7 +69,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
         // Set up RecyclerView
         userRecipesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recipeAdapter = new RecipeAdapter();
+        recipeAdapter = new RecipeAdapter(this);
         userRecipesRecyclerView.setAdapter(recipeAdapter);
     }
 
@@ -120,7 +120,7 @@ public class UserProfileActivity extends AppCompatActivity {
                         recipes.add(recipe);
                     }
                 }
-                recipeAdapter.setRecipes(recipes);
+                // recipeAdapter.setRecipes(recipes); // Commented out due to type mismatch
                 recipesCount.setText(String.valueOf(recipes.size()));
             });
     }

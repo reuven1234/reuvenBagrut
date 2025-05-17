@@ -29,8 +29,7 @@ import java.util.List;
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
 import com.example.reuvenbagrut.activities.RecipeDetailActivity;
 
-public class UploadedRecipesFragment extends Fragment
-        implements RecipeAdapter.OnRecipeClickListener {
+public class UploadedRecipesFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private RecipeAdapter adapter;
@@ -64,8 +63,7 @@ public class UploadedRecipesFragment extends Fragment
         emptyStateText      = view.findViewById(R.id.emptyStateText);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new RecipeAdapter();
-        adapter.setOnRecipeClickListener(this);
+        adapter = new RecipeAdapter(getContext());
         recyclerView.setAdapter(adapter);
 
         swipeRefreshLayout.setColorSchemeResources(
@@ -130,21 +128,6 @@ public class UploadedRecipesFragment extends Fragment
             Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG)
                     .setAction(R.string.retry, v -> loadUploadedRecipes())
                     .show();
-        }
-    }
-
-    @Override
-    public void onRecipeClick(Object recipe) {
-        if (recipe instanceof Recipe) {
-            navigateToRecipeDetail((Recipe) recipe);
-        }
-    }
-
-    private void navigateToRecipeDetail(Recipe recipe) {
-        if (recipe != null) {
-            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
-            intent.putExtra("recipe_id", recipe.getId());
-            startActivity(intent);
         }
     }
 

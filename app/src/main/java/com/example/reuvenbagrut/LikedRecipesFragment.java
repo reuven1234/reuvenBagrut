@@ -27,7 +27,7 @@ import java.util.List;
 
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
 
-public class LikedRecipesFragment extends Fragment implements RecipeAdapter.OnRecipeClickListener {
+public class LikedRecipesFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private RecipeAdapter adapter;
@@ -77,8 +77,7 @@ public class LikedRecipesFragment extends Fragment implements RecipeAdapter.OnRe
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new RecipeAdapter();
-        adapter.setOnRecipeClickListener(this);
+        adapter = new RecipeAdapter(getContext());
         recyclerView.setAdapter(adapter);
     }
 
@@ -176,21 +175,6 @@ public class LikedRecipesFragment extends Fragment implements RecipeAdapter.OnRe
             Snackbar.make(getView(), message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.retry, v -> loadLikedRecipes())
                 .show();
-        }
-    }
-
-    @Override
-    public void onRecipeClick(Object recipe) {
-        if (recipe instanceof Recipe) {
-            navigateToRecipeDetail((Recipe) recipe);
-        }
-    }
-
-    private void navigateToRecipeDetail(Recipe recipe) {
-        if (getActivity() != null && recipe != null) {
-            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
-            intent.putExtra("recipe_id", recipe.getId());
-            startActivity(intent);
         }
     }
 

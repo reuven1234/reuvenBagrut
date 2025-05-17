@@ -28,6 +28,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodPal"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
         <!-- Google Play Services -->
@@ -83,6 +84,7 @@
             android:name=".activities.RecipeDetailActivity"
             android:windowSoftInputMode="adjustPan"
             android:exported="false" />
+
 
 
     </application>

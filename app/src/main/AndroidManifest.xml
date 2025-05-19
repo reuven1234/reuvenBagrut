@@ -53,6 +53,11 @@
             android:name=".EditProfileActivity"
             android:windowSoftInputMode="adjustPan"
             android:exported="false" />
+
+        <activity
+            android:name=".RecipeDetailActivity"
+            android:label="Recipe Detail" />
+
         <activity
             android:name=".Home"
             android:windowSoftInputMode="adjustPan"

@@ -42,14 +42,14 @@ public class ProfileFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                            @Nullable ViewGroup container,
-                            @Nullable Bundle savedInstanceState) {
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
-        
+
         initializeViews(view);
         setupViewPager();
         loadUserData();
-        
+
         return view;
     }
 
@@ -73,56 +73,56 @@ public class ProfileFragment extends Fragment {
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager,
-            (tab, position) -> {
-                switch (position) {
-                    case 0:
-                        tab.setText(R.string.uploaded_recipes);
-                        break;
-                    case 1:
-                        tab.setText(R.string.liked_recipes);
-                        break;
-                }
-            }).attach();
+                (tab, position) -> {
+                    switch (position) {
+                        case 0:
+                            tab.setText(R.string.uploaded_recipes);
+                            break;
+                        case 1:
+                            tab.setText(R.string.liked_recipes);
+                            break;
+                    }
+                }).attach();
     }
 
     private void loadUserData() {
         if (currentUser == null) return;
 
         db.collection("users")
-          .document(currentUser.getUid())
-          .get()
-          .addOnSuccessListener(documentSnapshot -> {
-              User user = documentSnapshot.toObject(User.class);
-              if (user != null) {
-                  bioText.setText(user.getBio());
-              }
-          });
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    User user = documentSnapshot.toObject(User.class);
+                    if (user != null) {
+                        bioText.setText(user.getBio());
+                    }
+                });
 
         // Load recipes count
         db.collection("recipes")
-          .whereEqualTo("userId", currentUser.getUid())
-          .get()
-          .addOnSuccessListener(querySnapshot -> {
-              recipesCountText.setText(String.valueOf(querySnapshot.size()));
-          });
+                .whereEqualTo("userId", currentUser.getUid())
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    recipesCountText.setText(String.valueOf(querySnapshot.size()));
+                });
 
         // Load followers count
         db.collection("users")
-          .document(currentUser.getUid())
-          .collection("followers")
-          .get()
-          .addOnSuccessListener(querySnapshot -> {
-              followersCountText.setText(String.valueOf(querySnapshot.size()));
-          });
+                .document(currentUser.getUid())
+                .collection("followers")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    followersCountText.setText(String.valueOf(querySnapshot.size()));
+                });
 
         // Load following count
         db.collection("users")
-          .document(currentUser.getUid())
-          .collection("following")
-          .get()
-          .addOnSuccessListener(querySnapshot -> {
-              followingCountText.setText(String.valueOf(querySnapshot.size()));
-          });
+                .document(currentUser.getUid())
+                .collection("following")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    followingCountText.setText(String.valueOf(querySnapshot.size()));
+                });
     }
 
     @Override

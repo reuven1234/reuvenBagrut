@@ -59,10 +59,6 @@
             android:label="Recipe Detail" />
 
         <activity
-            android:name=".Home"
-            android:windowSoftInputMode="adjustPan"
-            android:exported="false" />
-        <activity
             android:name=".Login"
             android:windowSoftInputMode="adjustPan"
             android:exported="false" />
@@ -82,7 +78,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".UserProfileActivity"
+            android:name=".activities.UserProfileActivity"
             android:windowSoftInputMode="adjustPan"
             android:exported="false" />
         <activity

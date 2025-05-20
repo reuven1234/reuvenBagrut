@@ -14,32 +14,38 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.util.Log;
+import android.widget.Toast;
+
 import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.widget.SearchView;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.Query;
+
 import com.example.reuvenbagrut.api.RetrofitClient;
 import com.example.reuvenbagrut.models.RecipeApiResponse;
 import com.example.reuvenbagrut.models.RecipeApiResponse.RecipeResult;
+
 import com.example.reuvenbagrut.activities.RecipeDetailActivity;
+import com.example.reuvenbagrut.activities.UserProfileActivity;
+
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
 import com.example.reuvenbagrut.models.Recipe;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import java.util.List;
+
 import java.util.ArrayList;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.Query;
-import android.widget.Toast;
+import java.util.List;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
-    private static final String API_KEY = "07194345ea6d4e2eaf7f93b9d974d285";
-    private static final int NUM_RECIPES = 10;
 
     private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
@@ -106,13 +112,12 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onLikeClick(Recipe recipe) {
-                // Handle like click
                 if (currentUser != null) {
-                    String userId = currentUser.getUid();
-                    if (recipe.isLikedByUser(userId)) {
-                        recipe.removeLike(userId);
+                    String uid = currentUser.getUid();
+                    if (recipe.isLikedByUser(uid)) {
+                        recipe.removeLike(uid);
                     } else {
-                        recipe.addLike(userId);
+                        recipe.addLike(uid);
                     }
                     recipeAdapter.notifyDataSetChanged();
                 }
@@ -149,8 +154,8 @@ public class HomeFragment extends Fragment {
         swipeRefreshLayout.setColorSchemeResources(R.color.primary_color);
         swipeRefreshLayout.setOnRefreshListener(() -> {
             if (isSearching) {
-                String query = searchView.getQuery().toString();
-                if (!query.isEmpty()) searchRecipes(query);
+                String q = searchView.getQuery().toString();
+                if (!q.isEmpty()) searchRecipes(q);
             } else {
                 loadRecipes();
             }
@@ -164,28 +169,28 @@ public class HomeFragment extends Fragment {
                     .getText().toString();
             if (!isSearching) loadRecipes();
         });
-        // default selection
         categoryChipGroup.check(getCategoryChipId(selectedCategory));
     }
 
     private void loadRecipes() {
         db.collection("recipes")
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                List<Recipe> recipes = new ArrayList<>();
-                for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                    Recipe recipe = doc.toObject(Recipe.class);
-                    if (recipe != null) {
-                        recipe.setId(doc.getId());
-                        recipes.add(recipe);
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(snap -> {
+                    List<Recipe> list = new ArrayList<>();
+                    for (DocumentSnapshot doc : snap.getDocuments()) {
+                        Recipe r = doc.toObject(Recipe.class);
+                        if (r != null) {
+                            r.setId(doc.getId());
+                            list.add(r);
+                        }
                     }
-                }
-                recipeAdapter.setRecipes(recipes);
-            })
-            .addOnFailureListener(e -> {
-                Toast.makeText(getContext(), "Error loading recipes", Toast.LENGTH_SHORT).show();
-            });
+                    recipeAdapter.setRecipes(list);
+                    updateEmptyState(list.isEmpty());
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Error loading recipes", Toast.LENGTH_SHORT).show()
+                );
     }
 
     private void searchRecipes(String query) {
@@ -198,27 +203,62 @@ public class HomeFragment extends Fragment {
                     public void onResponse(Call<RecipeApiResponse> call,
                                            Response<RecipeApiResponse> response) {
                         showLoading(false);
+                        List<Recipe> recipes = new ArrayList<>();
                         if (response.isSuccessful() && response.body() != null) {
                             List<RecipeResult> results = response.body().getMeals();
-                            List<Recipe> recipes = new ArrayList<>();
-                            for (RecipeResult result : results) {
-                                Recipe recipe = new Recipe();
-                                recipe.setId(result.getIdMeal());
-                                recipe.setStrMeal(result.getStrMeal());
-                                recipe.setStrCategory(result.getStrCategory());
-                                recipe.setStrMealThumb(result.getStrMealThumb());
-                                recipes.add(recipe);
+                            if (results != null) {
+                                for (RecipeResult res : results) {
+                                    Recipe r = new Recipe();
+                                    r.setId(res.getIdMeal());
+                                    r.setStrMeal(res.getStrMeal());
+                                    r.setStrCategory(res.getStrCategory());
+                                    r.setStrArea(res.getStrArea());
+                                    r.setStrInstructions(res.getStrInstructions());
+                                    r.setStrMealThumb(res.getStrMealThumb());
+                                    r.setStrTags(res.getStrTags());
+                                    r.setStrYoutube(res.getStrYoutube());
+                                    r.setStrSource(res.getStrSource());
+                                    // build ingredient list…
+                                    List<String> ingr = new ArrayList<>();
+                                    for (int i = 1; i <= 20; i++) {
+                                        String ing = null, measure = null;
+                                        switch (i) {
+                                            case 1:
+                                                ing = res.getStrIngredient1();
+                                                measure = res.getStrMeasure1();
+                                                break;
+                                            case 2:
+                                                ing = res.getStrIngredient2();
+                                                measure = res.getStrMeasure2();
+                                                break;
+                                            // …cases 3–20…
+                                            case 20:
+                                                ing = res.getStrIngredient20();
+                                                measure = res.getStrMeasure20();
+                                                break;
+                                        }
+                                        if (ing != null && !ing.trim().isEmpty()) {
+                                            String line = ing.trim();
+                                            if (measure != null && !measure.trim().isEmpty()) {
+                                                line += " – " + measure.trim();
+                                            }
+                                            ingr.add(line);
+                                        }
+                                    }
+                                    r.setIngredients(ingr);
+                                    recipes.add(r);
+                                }
                             }
-                            recipeAdapter.setRecipes(recipes);
-                            updateEmptyState(recipes.isEmpty());
                         } else {
-                            showError(getString(R.string.error_searching));
+                            Snackbar.make(getView(), R.string.error_searching, Snackbar.LENGTH_LONG).show();
                         }
+                        recipeAdapter.setRecipes(recipes);
+                        updateEmptyState(recipes.isEmpty());
                     }
                     @Override
                     public void onFailure(Call<RecipeApiResponse> call, Throwable t) {
                         showLoading(false);
-                        showError(getString(R.string.error_searching));
+                        Snackbar.make(getView(), R.string.error_searching, Snackbar.LENGTH_LONG).show();
                         Log.e(TAG, "searchRecipes onFailure", t);
                     }
                 });
@@ -242,21 +282,6 @@ public class HomeFragment extends Fragment {
             shimmerLayout.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
-        }
-    }
-
-    private void showError(String msg) {
-        if (getView() != null) {
-            Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.retry, v -> {
-                        if (isSearching) {
-                            String q = searchView.getQuery().toString();
-                            if (!q.isEmpty()) searchRecipes(q);
-                        } else {
-                            loadRecipes();
-                        }
-                    })
-                    .show();
         }
     }
 

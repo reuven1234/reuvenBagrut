@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.reuvenbagrut.adapters.ChatListAdapter;
 import com.example.reuvenbagrut.models.Chat;
 import com.example.reuvenbagrut.models.ChatMessage;
+import com.example.reuvenbagrut.activities.ChatDetailActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -28,7 +29,7 @@ public class ChatFragment extends Fragment implements ChatListAdapter.OnChatClic
     private FirebaseFirestore db;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
 
         // Initialize Firebase
@@ -50,38 +51,38 @@ public class ChatFragment extends Fragment implements ChatListAdapter.OnChatClic
 
     private void loadChats() {
         db.collection("chats")
-            .whereArrayContains("participants", currentUserId)
-            .orderBy("lastMessageTime", Query.Direction.DESCENDING)
-            .addSnapshotListener((value, error) -> {
-                if (error != null) {
-                    Toast.makeText(requireContext(), "Error loading chats", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                .whereArrayContains("participants", currentUserId)
+                .orderBy("lastMessageTime", Query.Direction.DESCENDING)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        Toast.makeText(requireContext(), "Error loading chats", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-                if (value != null) {
-                    messages.clear();
-                    for (var doc : value.getDocuments()) {
-                        Chat chat = doc.toObject(Chat.class);
-                        if (chat != null) {
-                            chat.setId(doc.getId());
-                            String otherUserId = chat.getOtherParticipantId(currentUserId);
-                            if (otherUserId != null) {
-                                // Create a ChatMessage from the last message info
-                                ChatMessage message = new ChatMessage(
-                                    chat.getLastMessageSenderId(),
-                                    chat.getLastMessageSenderName(),
-                                    chat.getLastMessageSenderImage(),
-                                    chat.getLastMessage()
-                                );
-                                message.setTimestamp(chat.getLastMessageTime());
-                                message.setId(chat.getId());
-                                messages.add(message);
+                    if (value != null) {
+                        messages.clear();
+                        for (var doc : value.getDocuments()) {
+                            Chat chat = doc.toObject(Chat.class);
+                            if (chat != null) {
+                                chat.setId(doc.getId());
+                                String otherUserId = chat.getOtherParticipantId(currentUserId);
+                                if (otherUserId != null) {
+                                    // Create a ChatMessage from the last message info
+                                    ChatMessage message = new ChatMessage(
+                                            chat.getLastMessageSenderId(),
+                                            chat.getLastMessageSenderName(),
+                                            chat.getLastMessageSenderImage(),
+                                            chat.getLastMessage()
+                                    );
+                                    message.setTimestamp(chat.getLastMessageTime());
+                                    message.setId(chat.getId());
+                                    messages.add(message);
+                                }
                             }
                         }
+                        adapter.notifyDataSetChanged();
                     }
-                    adapter.notifyDataSetChanged();
-                }
-            });
+                });
     }
 
     @Override
@@ -90,4 +91,4 @@ public class ChatFragment extends Fragment implements ChatListAdapter.OnChatClic
         intent.putExtra("userId", message.getSenderId());
         startActivity(intent);
     }
-} 
+}

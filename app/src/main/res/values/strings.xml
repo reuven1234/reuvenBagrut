@@ -23,6 +23,9 @@
     <string name="invalid_email">Please enter a valid email address</string>
     <string name="password_min_length">Password must be at least 6 characters</string>
     <string name="auth_failed">Authentication failed</string>
+    <string name="error_recipe_not_found">Recipe not found</string>
+    <string name="error_login_to_favorite">Please log in to favorite recipes</string>
+    <string name="error_posting_comment">Failed to post comment</string>
     
     <!-- Home Fragment -->
     <string name="discover_recipes">Discover Recipes</string>

@@ -24,6 +24,7 @@ public class RecipeApiResponse {
         private String strCreativeCommonsConfirmed;
         private String dateModified;
         private String userId;
+        private String strCookingTime;
         // Ingredient fields from 1 to 20
         private String strIngredient1;
         private String strIngredient2;
@@ -113,6 +114,8 @@ public class RecipeApiResponse {
         public void setStrIngredient19(String strIngredient19) { this.strIngredient19 = strIngredient19; }
         public String getStrIngredient20() { return strIngredient20; }
         public void setStrIngredient20(String strIngredient20) { this.strIngredient20 = strIngredient20; }
+        public String getStrCookingTime() { return strCookingTime; }
+        public void setStrCookingTime(String strCookingTime) { this.strCookingTime = strCookingTime; }
 
         // Convenience getters
         public String getTitle() { return strMeal; }
@@ -135,6 +138,29 @@ public class RecipeApiResponse {
                 }
             }
             return list;
+        }
+
+        /**
+         * Estimates cooking time based on recipe complexity
+         * @return Estimated cooking time in minutes
+         */
+        public String getEstimatedCookingTime() {
+            int ingredientCount = getIngredients().size();
+            int instructionLength = strInstructions != null ? strInstructions.length() : 0;
+            
+            // Base time of 30 minutes
+            int estimatedTime = 30;
+            
+            // Add time based on number of ingredients (2 minutes per ingredient)
+            estimatedTime += ingredientCount * 2;
+            
+            // Add time based on instruction length (1 minute per 100 characters)
+            estimatedTime += instructionLength / 100;
+            
+            // Round to nearest 5 minutes
+            estimatedTime = ((estimatedTime + 4) / 5) * 5;
+            
+            return estimatedTime + " mins";
         }
     }
 }

@@ -2,8 +2,51 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+      
+      // User's liked recipes subcollection
+      match /liked_recipes/{recipeId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // User's following subcollection
+      match /following/{followingId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
+      }
+      
+      // User's followers subcollection
+      match /followers/{followerId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(followerId);
+      }
+    }
+
+    // Recipes collection
+    match /recipes/{recipeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      
+      // Recipe comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && 
+          request.auth.uid == resource.data.userId;
+      }
     }
   }
 } 

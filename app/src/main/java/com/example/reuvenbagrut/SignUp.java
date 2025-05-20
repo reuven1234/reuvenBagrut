@@ -24,6 +24,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.example.reuvenbagrut.UserRepository;
+import com.example.reuvenbagrut.FirebaseCallback;
+import com.example.reuvenbagrut.models.User;
 
 public class SignUp extends AppCompatActivity {
     private static final String TAG = "SignUpActivity";

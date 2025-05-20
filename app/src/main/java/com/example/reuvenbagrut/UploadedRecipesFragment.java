@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
+import com.example.reuvenbagrut.models.Recipe;
 import com.example.reuvenbagrut.activities.RecipeDetailActivity;
 
 public class UploadedRecipesFragment extends Fragment {
@@ -63,7 +64,7 @@ public class UploadedRecipesFragment extends Fragment {
         emptyStateText      = view.findViewById(R.id.emptyStateText);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new RecipeAdapter(getContext());
+        adapter = new RecipeAdapter(getContext(), new ArrayList<>(), null);
         recyclerView.setAdapter(adapter);
 
         swipeRefreshLayout.setColorSchemeResources(
@@ -116,7 +117,7 @@ public class UploadedRecipesFragment extends Fragment {
     private void updateRecipeList(List<Recipe> recipes) {
         recipeList.clear();
         recipeList.addAll(recipes);
-        adapter.updateRecipes(recipes);
+        adapter.setRecipes(recipes);
 
         boolean empty = recipes.isEmpty();
         emptyStateText.setVisibility(empty ? View.VISIBLE : View.GONE);

@@ -28,7 +28,7 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
     private FloatingActionButton fabSearch;
     private FirebaseAuth auth;
     private FirebaseUser user;
-    private int selectedItemId = R.id.nav_home;
+    private int selectedItemId = R.id.navigation_home;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +70,7 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
         
         // Restore selected item
         if (savedInstanceState != null) {
-            selectedItemId = savedInstanceState.getInt(KEY_SELECTED_ITEM, R.id.nav_home);
+            selectedItemId = savedInstanceState.getInt(KEY_SELECTED_ITEM, R.id.navigation_home);
         }
         bottomNavigationView.setSelectedItemId(selectedItemId);
 
@@ -85,35 +85,31 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
         selectedItemId = itemId;
-        
         Fragment selectedFragment = null;
         String tag = null;
         String title = getString(R.string.app_name);
-
-        if (itemId == R.id.nav_home) {
+        if (itemId == R.id.navigation_home) {
             selectedFragment = new HomeFragment();
             tag = "home";
-            title = getString(R.string.nav_home);
-        } else if (itemId == R.id.nav_add) {
+            title = getString(R.string.title_home);
+        } else if (itemId == R.id.navigation_add_recipe) {
             selectedFragment = new AddRecipeFragment();
             tag = "add";
-            title = getString(R.string.nav_add);
-        } else if (itemId == R.id.nav_profile) {
+            title = getString(R.string.title_add_recipe);
+        } else if (itemId == R.id.navigation_chat) {
+            selectedFragment = new ChatFragment();
+            tag = "chat";
+            title = getString(R.string.title_chat);
+        } else if (itemId == R.id.navigation_profile) {
             selectedFragment = new ProfileFragment();
             tag = "profile";
-            title = getString(R.string.nav_profile);
-        } else if (itemId == R.id.nav_settings) {
-            selectedFragment = new SettingsFragment();
-            tag = "settings";
-            title = getString(R.string.nav_settings);
+            title = getString(R.string.title_profile);
         }
-
         if (selectedFragment != null) {
             topAppBar.setTitle(title);
             replaceFragment(selectedFragment, tag);
             return true;
         }
-
         return false;
     }
 
@@ -121,13 +117,11 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
-            
             transaction.setCustomAnimations(
                 android.R.anim.fade_in,
                 android.R.anim.fade_out
             );
-            
-            transaction.replace(R.id.fragmentContainer, fragment, tag);
+            transaction.replace(R.id.nav_host_fragment, fragment, tag);
             transaction.commit();
         } catch (Exception e) {
             Log.e(TAG, "Error replacing fragment", e);
@@ -158,8 +152,8 @@ public class Home extends AppCompatActivity implements NavigationBarView.OnItemS
 
     @Override
     public void onBackPressed() {
-        if (selectedItemId != R.id.nav_home) {
-            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        if (selectedItemId != R.id.navigation_home) {
+            bottomNavigationView.setSelectedItemId(R.id.navigation_home);
         } else {
             super.onBackPressed();
         }

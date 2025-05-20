@@ -96,19 +96,21 @@ public class EditRecipeActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        titleInput.setText(recipe.getTitle());
-        descriptionInput.setText(recipe.getDescription());
+        titleInput.setText(recipe.getStrMeal());
+        descriptionInput.setText(""); // No description field in new model
         
         // Format ingredients list
         StringBuilder ingredientsBuilder = new StringBuilder();
-        for (String ingredient : recipe.getIngredients()) {
-            ingredientsBuilder.append(ingredient).append("\n");
+        if (recipe.getIngredients() != null) {
+            for (String ingredient : recipe.getIngredients()) {
+                ingredientsBuilder.append(ingredient).append("\n");
+            }
         }
         ingredientsInput.setText(ingredientsBuilder.toString());
         
-        instructionsInput.setText(recipe.getInstructions());
-        cookingTimeInput.setText(String.valueOf(recipe.getCookingTime()));
-        difficultyInput.setText(recipe.getDifficultyLevel(), false);
+        instructionsInput.setText(recipe.getStrInstructions());
+        cookingTimeInput.setText(recipe.getStrCookingTime());
+        difficultyInput.setText(recipe.getStrDifficultyLevel(), false);
     }
 
     private void saveRecipe() {
@@ -122,10 +124,6 @@ public class EditRecipeActivity extends AppCompatActivity {
 
         if (title.isEmpty()) {
             titleInput.setError(getString(R.string.error_required));
-            return;
-        }
-        if (description.isEmpty()) {
-            descriptionInput.setError(getString(R.string.error_required));
             return;
         }
         if (ingredientsText.isEmpty()) {
@@ -148,22 +146,12 @@ public class EditRecipeActivity extends AppCompatActivity {
         // Parse ingredients list
         List<String> ingredients = Arrays.asList(ingredientsText.split("\n"));
 
-        // Parse cooking time
-        int cookingTime;
-        try {
-            cookingTime = Integer.parseInt(cookingTimeStr);
-        } catch (NumberFormatException e) {
-            cookingTimeInput.setError(getString(R.string.error_invalid_number));
-            return;
-        }
-
         // Update recipe
-        recipe.setTitle(title);
-        recipe.setDescription(description);
-        recipe.setIngredients(ingredients);
-        recipe.setInstructions(instructions);
-        recipe.setCookingTime(String.valueOf(cookingTime));
-        recipe.setDifficultyLevel(difficulty);
+        recipe.setStrMeal(title);
+        recipe.setIngredients(android.text.TextUtils.join(",", ingredients));
+        recipe.setStrInstructions(instructions);
+        recipe.setStrCookingTime(cookingTimeStr);
+        recipe.setStrDifficultyLevel(difficulty);
 
         showProgress(true);
         db.collection("recipes").document(recipeId)

@@ -1,5 +1,6 @@
 package com.example.reuvenbagrut.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,87 +11,77 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.models.Comment;
-import com.google.firebase.firestore.FirebaseFirestore;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
+    private Context context;
     private List<Comment> comments;
-    private FirebaseFirestore db;
+    private OnCommentClickListener listener;
 
-    public CommentAdapter(List<Comment> comments) {
+    public interface OnCommentClickListener {
+        void onCommentClick(Comment comment);
+    }
+
+    public CommentAdapter(Context context, List<Comment> comments, OnCommentClickListener listener) {
+        this.context = context;
         this.comments = comments;
-        this.db = FirebaseFirestore.getInstance();
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public CommentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_comment, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_comment, parent, false);
         return new CommentViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {
         Comment comment = comments.get(position);
-        holder.commentText.setText(comment.getText());
-        holder.commentTime.setText(comment.getFormattedTime());
+        holder.userName.setText(comment.getUserName());
+        holder.commentText.setText(comment.getContent());
+        holder.timeText.setText(formatTime(comment.getTimestamp()));
 
-        // Load user information
-        if (comment.getUserId() != null) {
-            db.collection("users").document(comment.getUserId())
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String userName = documentSnapshot.getString("displayName");
-                        String userPhotoUrl = documentSnapshot.getString("photoUrl");
-                        
-                        holder.userName.setText(userName != null ? userName : "Anonymous");
-                        
-                        if (userPhotoUrl != null && !userPhotoUrl.isEmpty()) {
-                            Glide.with(holder.itemView.getContext())
-                                .load(userPhotoUrl)
-                                .placeholder(R.drawable.ic_profile_placeholder)
-                                .error(R.drawable.ic_profile_placeholder)
-                                .circleCrop()
-                                .into(holder.userImage);
-                        } else {
-                            holder.userImage.setImageResource(R.drawable.ic_profile_placeholder);
-                        }
-                    } else {
-                        holder.userName.setText("Anonymous");
-                        holder.userImage.setImageResource(R.drawable.ic_profile_placeholder);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    holder.userName.setText("Anonymous");
-                    holder.userImage.setImageResource(R.drawable.ic_profile_placeholder);
-                });
+        if (comment.getUserImage() != null && !comment.getUserImage().isEmpty()) {
+            Glide.with(context)
+                .load(comment.getUserImage())
+                .circleCrop()
+                .into(holder.profileImage);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onCommentClick(comment);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return comments != null ? comments.size() : 0;
+        return comments.size();
     }
 
-    public void updateComments(List<Comment> newComments) {
-        this.comments = newComments;
-        notifyDataSetChanged();
+    private String formatTime(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
     }
 
     static class CommentViewHolder extends RecyclerView.ViewHolder {
-        ImageView userImage;
+        ImageView profileImage;
         TextView userName;
         TextView commentText;
-        TextView commentTime;
+        TextView timeText;
 
         CommentViewHolder(View itemView) {
             super(itemView);
-            userImage = itemView.findViewById(R.id.commentUserImage);
-            userName = itemView.findViewById(R.id.commentUserName);
+            profileImage = itemView.findViewById(R.id.profileImage);
+            userName = itemView.findViewById(R.id.userName);
             commentText = itemView.findViewById(R.id.commentText);
-            commentTime = itemView.findViewById(R.id.commentTime);
+            timeText = itemView.findViewById(R.id.timeText);
         }
     }
 } 

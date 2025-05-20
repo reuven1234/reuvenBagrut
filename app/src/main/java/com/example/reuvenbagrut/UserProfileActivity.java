@@ -1,180 +1,185 @@
 package com.example.reuvenbagrut;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.example.reuvenbagrut.adapters.RecipeAdapter;
+import com.example.reuvenbagrut.models.Recipe;
+import com.example.reuvenbagrut.models.User;
+import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 public class UserProfileActivity extends AppCompatActivity {
-    private ImageView userProfileImage;
-    private TextView userName;
-    private TextView userBio;
-    private TextView followersCount;
-    private TextView followingCount;
-    private TextView recipesCount;
-    private Button followButton;
-    private ImageButton backButton;
-    private RecyclerView userRecipesRecyclerView;
+    private static final String TAG = "UserProfileActivity";
+
+    private ImageView profileImage;
+    private TextView nameText;
+    private TextView bioText;
+    private RecyclerView recipesRecyclerView;
     private RecipeAdapter recipeAdapter;
-    
+    private TabLayout tabLayout;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
-    private String profileUserId;
-    private boolean isFollowing = false;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
 
-        // Initialize Firebase
+        setupToolbar();
+        initializeViews();
+        setupRecyclerView();
+        setupTabLayout();
+
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        profileUserId = getIntent().getStringExtra("user_id");
+        userId = getIntent().getStringExtra("user_id");
 
-        initializeViews();
+        if (userId == null && currentUser != null) {
+            userId = currentUser.getUid();
+        }
+
         loadUserProfile();
-        loadUserRecipes();
-        checkFollowStatus();
+    }
 
-        // Set up back button
-        backButton.setOnClickListener(v -> finish());
-
-        // Set up follow button
-        followButton.setOnClickListener(v -> toggleFollow());
+    private void setupToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.profile);
+        }
     }
 
     private void initializeViews() {
-        userProfileImage = findViewById(R.id.userProfileImage);
-        userName = findViewById(R.id.userName);
-        userBio = findViewById(R.id.userBio);
-        followersCount = findViewById(R.id.followersCount);
-        followingCount = findViewById(R.id.followingCount);
-        recipesCount = findViewById(R.id.recipesCount);
-        followButton = findViewById(R.id.followButton);
-        backButton = findViewById(R.id.backButton);
-        userRecipesRecyclerView = findViewById(R.id.userRecipesRecyclerView);
+        profileImage = findViewById(R.id.profileImage);
+        bioText = findViewById(R.id.bioText);
+        recipesRecyclerView = findViewById(R.id.recipesRecyclerView);
+        tabLayout = findViewById(R.id.tabLayout);
+    }
 
-        // Set up RecyclerView
-        userRecipesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recipeAdapter = new RecipeAdapter(this);
-        userRecipesRecyclerView.setAdapter(recipeAdapter);
+    private void setupRecyclerView() {
+        recipesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recipeAdapter = new RecipeAdapter(this, new ArrayList<>(), null);
+        recipesRecyclerView.setAdapter(recipeAdapter);
+    }
+
+    private void setupTabLayout() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == 0) {
+                    loadUploadedRecipes();
+                } else {
+                    loadLikedRecipes();
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
     }
 
     private void loadUserProfile() {
-        db.collection("users").document(profileUserId)
-            .get()
-            .addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    updateUI(documentSnapshot);
-                }
-            });
+        db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        updateUI(documentSnapshot);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // Handle error
+                });
     }
 
     private void updateUI(DocumentSnapshot userDoc) {
         String name = userDoc.getString("name");
         String bio = userDoc.getString("bio");
-        String imageUrl = userDoc.getString("profileImage");
-        Long followers = userDoc.getLong("followers");
-        Long following = userDoc.getLong("following");
+        String photoUrl = userDoc.getString("photoUrl");
 
-        userName.setText(name);
-        userBio.setText(bio);
-        followersCount.setText(String.valueOf(followers != null ? followers : 0));
-        followingCount.setText(String.valueOf(following != null ? following : 0));
+        nameText.setText(name != null ? name : "Anonymous");
+        bioText.setText(bio != null ? bio : "No bio yet");
 
-        if (imageUrl != null && !imageUrl.isEmpty()) {
+        if (photoUrl != null && !photoUrl.isEmpty()) {
             Glide.with(this)
-                .load(imageUrl)
-                .circleCrop()
-                .into(userProfileImage);
-        }
-
-        // Hide follow button if viewing own profile
-        if (currentUser != null && currentUser.getUid().equals(profileUserId)) {
-            followButton.setVisibility(View.GONE);
-        }
-    }
-
-    private void loadUserRecipes() {
-        db.collection("recipes")
-            .whereEqualTo("userId", profileUserId)
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                ArrayList<Recipe> recipes = new ArrayList<>();
-                for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                    Recipe recipe = doc.toObject(Recipe.class);
-                    if (recipe != null) {
-                        recipes.add(recipe);
-                    }
-                }
-                // recipeAdapter.setRecipes(recipes); // Commented out due to type mismatch
-                recipesCount.setText(String.valueOf(recipes.size()));
-            });
-    }
-
-    private void checkFollowStatus() {
-        if (currentUser == null || currentUser.getUid().equals(profileUserId)) {
-            return;
-        }
-
-        db.collection("users")
-            .document(currentUser.getUid())
-            .collection("following")
-            .document(profileUserId)
-            .get()
-            .addOnSuccessListener(documentSnapshot -> {
-                isFollowing = documentSnapshot.exists();
-                updateFollowButton();
-            });
-    }
-
-    private void updateFollowButton() {
-        followButton.setText(isFollowing ? "Following" : "Follow");
-    }
-
-    private void toggleFollow() {
-        if (currentUser == null) {
-            return;
-        }
-
-        String currentUserId = currentUser.getUid();
-        if (isFollowing) {
-            // Unfollow
-            db.collection("users").document(currentUserId)
-                .collection("following").document(profileUserId).delete();
-            db.collection("users").document(profileUserId)
-                .collection("followers").document(currentUserId).delete();
+                    .load(photoUrl)
+                    .placeholder(R.drawable.ic_profile_placeholder)
+                    .error(R.drawable.ic_profile_placeholder)
+                    .circleCrop()
+                    .into(profileImage);
         } else {
-            // Follow
-            db.collection("users").document(currentUserId)
-                .collection("following").document(profileUserId).set(new HashMap<>());
-            db.collection("users").document(profileUserId)
-                .collection("followers").document(currentUserId).set(new HashMap<>());
+            profileImage.setImageResource(R.drawable.ic_profile_placeholder);
         }
-
-        isFollowing = !isFollowing;
-        updateFollowButton();
-        updateFollowerCount(isFollowing ? 1 : -1);
     }
 
-    private void updateFollowerCount(int change) {
-        db.collection("users").document(profileUserId)
-            .update("followers", com.google.firebase.firestore.FieldValue.increment(change));
-        
-        int currentCount = Integer.parseInt(followersCount.getText().toString());
-        followersCount.setText(String.valueOf(currentCount + change));
+    private void loadUploadedRecipes() {
+        db.collection("recipes")
+                .whereEqualTo("userId", userId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Recipe> recipes = new ArrayList<>();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        Recipe recipe = doc.toObject(Recipe.class);
+                        if (recipe != null) {
+                            recipe.setId(doc.getId());
+                            recipes.add(recipe);
+                        }
+                    }
+                    recipeAdapter.setRecipes(recipes);
+                })
+                .addOnFailureListener(e -> {
+                    // Handle error
+                });
+    }
+
+    private void loadLikedRecipes() {
+        db.collection("recipes")
+                .whereArrayContains("likedBy", userId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Recipe> recipes = new ArrayList<>();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        Recipe recipe = doc.toObject(Recipe.class);
+                        if (recipe != null) {
+                            recipe.setId(doc.getId());
+                            recipes.add(recipe);
+                        }
+                    }
+                    recipeAdapter.setRecipes(recipes);
+                })
+                .addOnFailureListener(e -> {
+                    // Handle error
+                });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 } 

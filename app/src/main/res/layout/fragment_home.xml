@@ -167,6 +167,15 @@
                         android:textAppearance="@style/TextAppearance.FoodPal.Body1"
                         android:textColor="@color/text_secondary"
                         android:visibility="gone"/>
+
+                    <!-- Progress Bar -->
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone"/>
+
                 </FrameLayout>
 
                 <!-- Add some padding at the bottom for better scrolling experience -->

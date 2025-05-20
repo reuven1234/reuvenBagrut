@@ -89,6 +89,17 @@
             android:name=".activities.RecipeDetailActivity"
             android:windowSoftInputMode="adjustPan"
             android:exported="false" />
+        <activity
+            android:name=".activities.EditProfileActivity"
+            android:exported="false"
+            android:label="@string/edit_profile"
+            android:parentActivityName=".MainActivity"/>
+        <activity
+            android:name=".activities.ChatDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan"
+            android:label="@string/chat"
+            android:parentActivityName=".MainActivity"/>
 
 
 

@@ -15,8 +15,8 @@ import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
-import com.example.reuvenbagrut.Recipe;
-import com.example.reuvenbagrut.RecipeDetailActivity;
+import com.example.reuvenbagrut.models.Recipe;
+import com.example.reuvenbagrut.activities.RecipeDetailActivity;
 import com.example.reuvenbagrut.api.RetrofitClient;
 import com.example.reuvenbagrut.models.RecipeApiResponse;
 import retrofit2.Call;
@@ -63,7 +63,7 @@ public class SearchActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recipeAdapter = new RecipeAdapter(this);
+        recipeAdapter = new RecipeAdapter(this, new ArrayList<>(), null);
         recyclerView.setAdapter(recipeAdapter);
     }
 
@@ -99,8 +99,20 @@ public class SearchActivity extends AppCompatActivity {
                         showLoading(false);
                         
                         if (response.isSuccessful() && response.body() != null) {
-                            recipeAdapter.setRecipes(response.body().getMeals());
-                            if (response.body().getMeals() == null || response.body().getMeals().isEmpty()) {
+                            List<RecipeApiResponse.RecipeResult> results = response.body().getMeals();
+                            List<Recipe> recipes = new ArrayList<>();
+                            if (results != null) {
+                                for (RecipeApiResponse.RecipeResult result : results) {
+                                    Recipe recipe = new Recipe();
+                                    recipe.setId(result.getIdMeal());
+                                    recipe.setStrMeal(result.getStrMeal());
+                                    recipe.setStrCategory(result.getStrCategory());
+                                    recipe.setStrMealThumb(result.getStrMealThumb());
+                                    recipes.add(recipe);
+                                }
+                            }
+                            recipeAdapter.setRecipes(recipes);
+                            if (recipes.isEmpty()) {
                                 Toast.makeText(SearchActivity.this, "No recipes found", Toast.LENGTH_SHORT).show();
                             }
                         } else {

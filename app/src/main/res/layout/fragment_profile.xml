@@ -10,7 +10,9 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fitsSystemWindows="true">
+        android:background="@android:color/transparent"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
@@ -35,30 +37,35 @@
                     android:src="@drawable/ic_settings_24"
                     android:contentDescription="@string/nav_settings"/>
 
-                <de.hdodenhof.circleimageview.CircleImageView
+                <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/profileImage"
                     android:layout_width="120dp"
                     android:layout_height="120dp"
                     android:scaleType="centerCrop"
-                    tools:src="@drawable/default_profile"/>
+                    android:src="@drawable/ic_profile_placeholder"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:shapeAppearanceOverlay="@style/CircleImageView"/>
 
                 <TextView
-                    android:id="@+id/hiTxt"
+                    android:id="@+id/usernameText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    tools:text="Hi, John"/>
+                    android:text="John Doe"
+                    tools:text="John Doe"/>
 
                 <TextView
-                    android:id="@+id/bio"
+                    android:id="@+id/bioText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:textSize="16sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:gravity="center"
+                    android:text="Passionate about cooking! 🍽️"
                     tools:text="Passionate about cooking! 🍽️"/>
 
                 <!-- Social Stats -->
@@ -82,7 +89,6 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
                             android:gravity="center">
 
                             <TextView
@@ -91,12 +97,12 @@
                                 android:layout_height="wrap_content"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                tools:text="15"/>
+                                android:text="15"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Recipes"
+                                android:text="@string/recipes"
                                 android:textSize="14sp"
                                 android:textColor="?attr/colorOnSurfaceVariant"/>
                         </LinearLayout>
@@ -112,7 +118,6 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
                             android:gravity="center">
 
                             <TextView
@@ -121,12 +126,12 @@
                                 android:layout_height="wrap_content"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                tools:text="250"/>
+                                android:text="250"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Followers"
+                                android:text="@string/followers"
                                 android:textSize="14sp"
                                 android:textColor="?attr/colorOnSurfaceVariant"/>
                         </LinearLayout>
@@ -142,7 +147,6 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
                             android:gravity="center">
 
                             <TextView
@@ -151,12 +155,12 @@
                                 android:layout_height="wrap_content"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                tools:text="124"/>
+                                android:text="124"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Following"
+                                android:text="@string/following"
                                 android:textSize="14sp"
                                 android:textColor="?attr/colorOnSurfaceVariant"/>
                         </LinearLayout>
@@ -164,7 +168,7 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/editProfileBtn"
+                    android:id="@+id/editProfileButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -183,11 +187,13 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
         <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabs"
+            android:id="@+id/tabLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:tabGravity="fill"
             app:tabMode="fixed"
-            app:tabGravity="fill"/>
+            app:tabTextColor="@color/design_default_color_primary"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 

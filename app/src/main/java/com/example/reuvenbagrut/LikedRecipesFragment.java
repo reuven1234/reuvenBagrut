@@ -2,6 +2,7 @@ package com.example.reuvenbagrut;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,12 +21,14 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.example.reuvenbagrut.adapters.RecipeAdapter;
+import com.example.reuvenbagrut.models.Recipe;
 
 public class LikedRecipesFragment extends Fragment {
 
@@ -77,7 +80,7 @@ public class LikedRecipesFragment extends Fragment {
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new RecipeAdapter(getContext());
+        adapter = new RecipeAdapter(getContext(), new ArrayList<>(), null);
         recyclerView.setAdapter(adapter);
     }
 
@@ -99,6 +102,7 @@ public class LikedRecipesFragment extends Fragment {
         db.collection("users")
           .document(userId)
           .collection("liked_recipes")
+          .orderBy("timestamp", Query.Direction.DESCENDING)
           .get()
           .addOnCompleteListener(task -> {
               if (task.isSuccessful() && isAdded()) {
@@ -106,11 +110,17 @@ public class LikedRecipesFragment extends Fragment {
                   
                   for (QueryDocumentSnapshot document : task.getResult()) {
                       try {
-                          Recipe recipe = document.toObject(Recipe.class);
-                          recipe.setId(document.getId());
+                          Recipe recipe = new Recipe();
+                          recipe.setId(document.getString("recipeId"));
+                          recipe.setStrMeal(document.getString("title"));
+                          recipe.setStrMealThumb(document.getString("imageUrl"));
+                          recipe.setStrCategory(document.getString("category"));
+                          if (document.getTimestamp("timestamp") != null) {
+                              recipe.setTimestamp(document.getTimestamp("timestamp").toDate().getTime());
+                          }
                           likedRecipes.add(recipe);
                       } catch (Exception e) {
-                          // Handle error
+                          Log.e("LikedRecipesFragment", "Error parsing recipe", e);
                       }
                   }
                   
@@ -131,7 +141,7 @@ public class LikedRecipesFragment extends Fragment {
 
     private void updateRecipeList(List<Recipe> recipes) {
         if (adapter != null) {
-            adapter.updateRecipes(recipes);
+            adapter.setRecipes(recipes);
             updateEmptyState(recipes.isEmpty());
         }
     }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <attr name="colorOnPrimaryContainerVariant" format="color"/>
+
     <declare-styleable name="CustomImageView">
         <attr name="cornerRadius" format="dimension"/>
         <attr name="strokeWidth" format="dimension"/>

@@ -1,66 +1,47 @@
 package com.example.reuvenbagrut.models;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 public class Comment {
     private String id;
+    private String recipeId;
     private String userId;
-    private String text;
-    private Date timestamp;
+    private String userName;
+    private String userImage;
+    private String content;
+    private long timestamp;
 
     public Comment() {
-        // Default constructor required for Firebase
+        // Required empty constructor for Firestore
     }
 
-    public Comment(String userId, String text) {
-        this.userId = userId;
-        this.text = text;
-        this.timestamp = new Date();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
+    public Comment(String id, String recipeId, String userId, String userName, String userImage, String content) {
         this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
+        this.recipeId = recipeId;
         this.userId = userId;
+        this.userName = userName;
+        this.userImage = userImage;
+        this.content = content;
+        this.timestamp = System.currentTimeMillis();
     }
 
-    public String getText() {
-        return text;
-    }
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public void setText(String text) {
-        this.text = text;
-    }
+    public String getRecipeId() { return recipeId; }
+    public void setRecipeId(String recipeId) { this.recipeId = recipeId; }
 
-    public Date getTimestamp() {
-        return timestamp;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 
-    public String getFormattedTime() {
-        if (timestamp == null) return "";
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        return sdf.format(timestamp);
-    }
+    public String getUserImage() { return userImage; }
+    public void setUserImage(String userImage) { this.userImage = userImage; }
 
-    public User getUser() {
-        // This is a placeholder - the actual user data should be loaded from Firestore
-        // when the comment is displayed
-        return null;
-    }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 } 

@@ -1,38 +1,121 @@
 package com.example.reuvenbagrut.models;
 
-import java.util.List;
+import android.os.Parcel;
+import android.os.Parcelable;
+import com.google.firebase.firestore.PropertyName;
 
-public class Recipe {
+import java.util.List;
+import java.util.ArrayList;
+
+public class Recipe implements Parcelable {
     private String id;
-    private String title;
-    private String description;
-    private String imageUrl;
-    private String cookingTime;
-    private String difficultyLevel;
-    private String authorId;
-    private List<String> ingredients;
-    private String instructions;
+    private String strMeal;
+    private String strCategory;
+    private String strArea;
+    private String strInstructions;
+    private String strMealThumb;
+    private String strTags;
+    private String strYoutube;
+    private String strSource;
+    private String strCookingTime;
+    private String strDifficultyLevel;
+    private String strAuthorId;
+    private String strAuthor;
+    private String strAuthorImage;
+    private String userId;
+    private String userName;
+    private String userImage;
+    @PropertyName("ingredients")
+    private Object ingredients;
+    @PropertyName("ingredientsString")
+    private String ingredientsString;
+    private List<String> steps;
     private int likesCount;
     private boolean isLiked;
+    private long timestamp;
+    private List<String> likedBy;
 
     public Recipe() {
-        // Default constructor required for Firebase
+        // Required empty constructor for Firestore
+        this.likedBy = new ArrayList<>();
     }
 
-    public Recipe(String id, String title, String description, String imageUrl, 
-                 String cookingTime, String difficultyLevel, String authorId,
-                 List<String> ingredients, String instructions) {
+    public Recipe(String id, String strMeal, String strCategory, String strCookingTime,
+                 String strDifficultyLevel, String strMealThumb, String userId,
+                 String userName, String userImage) {
         this.id = id;
-        this.title = title;
-        this.description = description;
-        this.imageUrl = imageUrl;
-        this.cookingTime = cookingTime;
-        this.difficultyLevel = difficultyLevel;
-        this.authorId = authorId;
-        this.ingredients = ingredients;
-        this.instructions = instructions;
-        this.likesCount = 0;
-        this.isLiked = false;
+        this.strMeal = strMeal;
+        this.strCategory = strCategory;
+        this.strCookingTime = strCookingTime;
+        this.strDifficultyLevel = strDifficultyLevel;
+        this.strMealThumb = strMealThumb;
+        this.userId = userId;
+        this.userName = userName;
+        this.userImage = userImage;
+        this.likedBy = new ArrayList<>();
+    }
+
+    protected Recipe(Parcel in) {
+        id = in.readString();
+        strMeal = in.readString();
+        strCategory = in.readString();
+        strArea = in.readString();
+        strInstructions = in.readString();
+        strMealThumb = in.readString();
+        strTags = in.readString();
+        strYoutube = in.readString();
+        strSource = in.readString();
+        strCookingTime = in.readString();
+        strDifficultyLevel = in.readString();
+        strAuthorId = in.readString();
+        strAuthor = in.readString();
+        strAuthorImage = in.readString();
+        userId = in.readString();
+        userName = in.readString();
+        userImage = in.readString();
+        timestamp = in.readLong();
+        likedBy = new ArrayList<>();
+        in.readStringList(likedBy);
+    }
+
+    public static final Creator<Recipe> CREATOR = new Creator<Recipe>() {
+        @Override
+        public Recipe createFromParcel(Parcel in) {
+            return new Recipe(in);
+        }
+
+        @Override
+        public Recipe[] newArray(int size) {
+            return new Recipe[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
+        dest.writeString(strMeal);
+        dest.writeString(strCategory);
+        dest.writeString(strArea);
+        dest.writeString(strInstructions);
+        dest.writeString(strMealThumb);
+        dest.writeString(strTags);
+        dest.writeString(strYoutube);
+        dest.writeString(strSource);
+        dest.writeString(strCookingTime);
+        dest.writeString(strDifficultyLevel);
+        dest.writeString(strAuthorId);
+        dest.writeString(strAuthor);
+        dest.writeString(strAuthorImage);
+        dest.writeString(userId);
+        dest.writeString(userName);
+        dest.writeString(userImage);
+        dest.writeLong(timestamp);
+        dest.writeStringList(likedBy);
     }
 
     // Getters and Setters
@@ -44,68 +127,166 @@ public class Recipe {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
+    public String getStrMeal() {
+        return strMeal;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setStrMeal(String strMeal) {
+        this.strMeal = strMeal;
     }
 
-    public String getDescription() {
-        return description;
+    public String getStrCategory() {
+        return strCategory;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setStrCategory(String strCategory) {
+        this.strCategory = strCategory;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getStrArea() {
+        return strArea;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setStrArea(String strArea) {
+        this.strArea = strArea;
     }
 
-    public String getCookingTime() {
-        return cookingTime;
+    public String getStrInstructions() {
+        return strInstructions;
     }
 
-    public void setCookingTime(String cookingTime) {
-        this.cookingTime = cookingTime;
+    public void setStrInstructions(String strInstructions) {
+        this.strInstructions = strInstructions;
     }
 
-    public String getDifficultyLevel() {
-        return difficultyLevel;
+    public String getStrMealThumb() {
+        return strMealThumb;
     }
 
-    public void setDifficultyLevel(String difficultyLevel) {
-        this.difficultyLevel = difficultyLevel;
+    public void setStrMealThumb(String strMealThumb) {
+        this.strMealThumb = strMealThumb;
     }
 
-    public String getAuthorId() {
-        return authorId;
+    public String getStrTags() {
+        return strTags;
     }
 
-    public void setAuthorId(String authorId) {
-        this.authorId = authorId;
+    public void setStrTags(String strTags) {
+        this.strTags = strTags;
     }
 
+    public String getStrYoutube() {
+        return strYoutube;
+    }
+
+    public void setStrYoutube(String strYoutube) {
+        this.strYoutube = strYoutube;
+    }
+
+    public String getStrSource() {
+        return strSource;
+    }
+
+    public void setStrSource(String strSource) {
+        this.strSource = strSource;
+    }
+
+    public String getStrCookingTime() {
+        return strCookingTime;
+    }
+
+    public void setStrCookingTime(String strCookingTime) {
+        this.strCookingTime = strCookingTime;
+    }
+
+    public String getStrDifficultyLevel() {
+        return strDifficultyLevel;
+    }
+
+    public void setStrDifficultyLevel(String strDifficultyLevel) {
+        this.strDifficultyLevel = strDifficultyLevel;
+    }
+
+    public String getStrAuthorId() {
+        return strAuthorId;
+    }
+
+    public void setStrAuthorId(String strAuthorId) {
+        this.strAuthorId = strAuthorId;
+    }
+
+    public String getStrAuthor() {
+        return strAuthor;
+    }
+
+    public void setStrAuthor(String strAuthor) {
+        this.strAuthor = strAuthor;
+    }
+
+    public String getStrAuthorImage() {
+        return strAuthorImage;
+    }
+
+    public void setStrAuthorImage(String strAuthorImage) {
+        this.strAuthorImage = strAuthorImage;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserImage() {
+        return userImage;
+    }
+
+    public void setUserImage(String userImage) {
+        this.userImage = userImage;
+    }
+
+    @PropertyName("ingredients")
     public List<String> getIngredients() {
-        return ingredients;
+        if (ingredients == null) return new ArrayList<>();
+        if (ingredients instanceof String) {
+            List<String> list = new ArrayList<>();
+            for (String s : ((String) ingredients).split(",")) {
+                list.add(s.trim());
+            }
+            return list;
+        } else if (ingredients instanceof List) {
+            //noinspection unchecked
+            return (List<String>) ingredients;
+        }
+        return new ArrayList<>();
     }
 
-    public void setIngredients(List<String> ingredients) {
+    @PropertyName("ingredients")
+    public void setIngredients(Object ingredients) {
         this.ingredients = ingredients;
     }
 
-    public String getInstructions() {
-        return instructions;
+    @PropertyName("ingredientsString")
+    public void setIngredientsString(String ingredientsString) {
+        this.ingredientsString = ingredientsString;
     }
 
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
+    public List<String> getSteps() {
+        return steps;
+    }
+
+    public void setSteps(List<String> steps) {
+        this.steps = steps;
     }
 
     public int getLikesCount() {
@@ -122,5 +303,40 @@ public class Recipe {
 
     public void setLiked(boolean liked) {
         isLiked = liked;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public List<String> getLikedBy() {
+        return likedBy;
+    }
+
+    public void setLikedBy(List<String> likedBy) {
+        this.likedBy = likedBy;
+    }
+
+    public boolean isLikedByUser(String userId) {
+        return likedBy != null && likedBy.contains(userId);
+    }
+
+    public void addLike(String userId) {
+        if (likedBy == null) {
+            likedBy = new ArrayList<>();
+        }
+        if (!likedBy.contains(userId)) {
+            likedBy.add(userId);
+        }
+    }
+
+    public void removeLike(String userId) {
+        if (likedBy != null) {
+            likedBy.remove(userId);
+        }
     }
 } 

@@ -60,15 +60,32 @@
                 android:layout_height="4dp"/>
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/recipeDescription"
+                android:id="@+id/recipeCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                android:maxLines="3"
-                android:ellipsize="end"
-                android:lineSpacingMultiplier="1.2"
-                tools:text="A detailed description of this delicious recipe that spans multiple lines to show how the text wraps and is truncated."/>
+                tools:text="Category"/>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="4dp"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/cookingTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="30 mins"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/difficultyLevel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Easy"/>
 
         </LinearLayout>
 

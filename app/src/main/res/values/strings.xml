@@ -115,6 +115,17 @@
     <string name="app_version_format">Version %1$s</string>
     <string name="logout_error">Error logging out</string>
     <string name="edit_profile">Edit Profile</string>
+    <string name="username">Username</string>
+    <string name="bio">Bio</string>
+    <string name="save">Save</string>
+    <string name="username_required">Username is required</string>
+    <string name="profile_updated">Profile updated successfully</string>
+    <string name="error_updating_profile">Error updating profile</string>
+    <string name="recipes">Recipes</string>
+    <string name="followers">Followers</string>
+    <string name="following">Following</string>
+    <string name="uploaded_recipes">Uploaded Recipes</string>
+    <string name="liked_recipes">Liked Recipes</string>
     
     <!-- Actions -->
     <string name="select_picture">Select Picture</string>
@@ -168,4 +179,22 @@
     
     <!-- New string resources -->
     <string name="search">Search</string>
+    
+    <!-- New string resources -->
+    <string name="profile_image">Profile Image</string>
+    
+    <!-- New string resources for chat functionality -->
+    <string name="title_chat">Chat</string>
+    <string name="title_add_recipe">Add Recipe</string>
+    <string name="title_profile">Profile</string>
+    <string name="title_home">Home</string>
+    <string name="type_message">Type a message</string>
+    <string name="send">Send</string>
+    <string name="search_users">Search users</string>
+    <string name="no_messages">No messages yet</string>
+    <string name="error_sending_message">Error sending message</string>
+    <string name="chat">Chat</string>
+    <string name="new_chat">New Chat</string>
+    <string name="no_chats">No chats yet</string>
+    <string name="user_image">User Image</string>
 </resources>

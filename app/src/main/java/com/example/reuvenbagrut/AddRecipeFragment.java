@@ -32,6 +32,12 @@ import java.util.UUID;
 import android.util.Log;
 import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.UploadTask;
+import com.example.reuvenbagrut.models.Recipe;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 public class AddRecipeFragment extends Fragment {
     private static final String TAG = "AddRecipeFragment";
@@ -232,7 +238,7 @@ public class AddRecipeFragment extends Fragment {
         recipe.setStrCategory("Other"); // Default category
         recipe.setStrInstructions(instructionsText);
         recipe.setUserId(currentUser.getUid());
-        recipe.setIngredients(ingredients);
+        recipe.setIngredients(android.text.TextUtils.join(",", ingredients));
         recipe.setSteps(steps);
         recipe.setTimestamp(System.currentTimeMillis());
         

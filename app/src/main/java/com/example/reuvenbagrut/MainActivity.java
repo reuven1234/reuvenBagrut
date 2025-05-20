@@ -11,11 +11,15 @@ import androidx.core.splashscreen.SplashScreen;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
     private MaterialButton signUpButton;
     private MaterialButton loginButton;
-    private MaterialButton skipButton;
     private FirebaseAuth mAuth;
     private boolean keepSplashScreen = true;
 
@@ -53,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     private void initializeViews() {
         signUpButton = findViewById(R.id.SignUp);
         loginButton = findViewById(R.id.Login);
-        skipButton = findViewById(R.id.skip);
 
         // Apply button styles
         signUpButton.setBackgroundTintList(getColorStateList(R.color.primary_color));
@@ -63,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
     private void setupClickListeners() {
         signUpButton.setOnClickListener(v -> navigateToSignUp());
         loginButton.setOnClickListener(v -> navigateToLogin());
-        skipButton.setOnClickListener(v -> navigateToHome());
     }
 
     private void navigateToSignUp() {
@@ -83,5 +85,29 @@ public class MainActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private void setupNavigation() {
+        BottomNavigationView navView = findViewById(R.id.nav_view);
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavigationUI.setupWithNavController(navView, navController);
+
+        navView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.navigation_home) {
+                navController.navigate(R.id.navigation_home);
+                return true;
+            } else if (itemId == R.id.navigation_add_recipe) {
+                navController.navigate(R.id.navigation_add_recipe);
+                return true;
+            } else if (itemId == R.id.navigation_chat) {
+                navController.navigate(R.id.navigation_chat);
+                return true;
+            } else if (itemId == R.id.navigation_profile) {
+                navController.navigate(R.id.navigation_profile);
+                return true;
+            }
+            return false;
+        });
     }
 }

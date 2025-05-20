@@ -25,6 +25,11 @@
         <item name="android:fontFamily">sans-serif</item>
     </style>
 
+    <style name="RoundedCornerImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
     <!-- Button Styles -->
     <style name="Widget.FoodPal.Button" parent="Widget.Material3.Button">
         <item name="android:textSize">16sp</item>
@@ -88,4 +93,12 @@
         <item name="indicatorColor">@color/primary_color</item>
         <item name="trackColor">@color/ripple_color</item>
     </style>
+
+    <!-- Required for circular ShapeableImageView in activity_recipe_detail.xml -->
+    <style name="ShapeAppearanceOverlay_Material3_CircularImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+
 </resources>

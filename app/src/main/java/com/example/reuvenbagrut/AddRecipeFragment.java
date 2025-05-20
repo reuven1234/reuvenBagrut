@@ -238,7 +238,7 @@ public class AddRecipeFragment extends Fragment {
         recipe.setStrCategory("Other"); // Default category
         recipe.setStrInstructions(instructionsText);
         recipe.setUserId(currentUser.getUid());
-        recipe.setIngredients(android.text.TextUtils.join(",", ingredients));
+        recipe.setIngredients(ingredients);
         recipe.setSteps(steps);
         recipe.setTimestamp(System.currentTimeMillis());
         

@@ -102,26 +102,6 @@ public class HomeFragment extends Fragment {
                 intent.putExtra("recipe", recipe);
                 startActivity(intent);
             }
-
-            @Override
-            public void onUserClick(String userId) {
-                Intent intent = new Intent(getContext(), UserProfileActivity.class);
-                intent.putExtra("userId", userId);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onLikeClick(Recipe recipe) {
-                if (currentUser != null) {
-                    String uid = currentUser.getUid();
-                    if (recipe.isLikedByUser(uid)) {
-                        recipe.removeLike(uid);
-                    } else {
-                        recipe.addLike(uid);
-                    }
-                    recipeAdapter.notifyDataSetChanged();
-                }
-            }
         });
         recyclerView.setAdapter(recipeAdapter);
     }
@@ -185,15 +165,15 @@ public class HomeFragment extends Fragment {
                             // Get user information
                             if (r.getUserId() != null) {
                                 db.collection("users")
-                                    .document(r.getUserId())
-                                    .get()
-                                    .addOnSuccessListener(userDoc -> {
-                                        if (userDoc.exists()) {
-                                            r.setUserName(userDoc.getString("name"));
-                                            r.setUserImage(userDoc.getString("profileImageUrl"));
-                                            recipeAdapter.notifyDataSetChanged();
-                                        }
-                                    });
+                                        .document(r.getUserId())
+                                        .get()
+                                        .addOnSuccessListener(userDoc -> {
+                                            if (userDoc.exists()) {
+                                                r.setUserName(userDoc.getString("name"));
+                                                r.setUserImage(userDoc.getString("profileImageUrl"));
+                                                recipeAdapter.notifyDataSetChanged();
+                                            }
+                                        });
                             }
                             list.add(r);
                         }
@@ -236,19 +216,26 @@ public class HomeFragment extends Fragment {
                                     for (int i = 1; i <= 20; i++) {
                                         String ing = null, measure = null;
                                         switch (i) {
-                                            case 1:
-                                                ing = res.getStrIngredient1();
-                                                measure = res.getStrMeasure1();
-                                                break;
-                                            case 2:
-                                                ing = res.getStrIngredient2();
-                                                measure = res.getStrMeasure2();
-                                                break;
-                                            // …cases 3–20…
-                                            case 20:
-                                                ing = res.getStrIngredient20();
-                                                measure = res.getStrMeasure20();
-                                                break;
+                                            case 1: ing = res.getStrIngredient1(); measure = res.getStrMeasure1(); break;
+                                            case 2: ing = res.getStrIngredient2(); measure = res.getStrMeasure2(); break;
+                                            case 3: ing = res.getStrIngredient3(); measure = res.getStrMeasure3(); break;
+                                            case 4: ing = res.getStrIngredient4(); measure = res.getStrMeasure4(); break;
+                                            case 5: ing = res.getStrIngredient5(); measure = res.getStrMeasure5(); break;
+                                            case 6: ing = res.getStrIngredient6(); measure = res.getStrMeasure6(); break;
+                                            case 7: ing = res.getStrIngredient7(); measure = res.getStrMeasure7(); break;
+                                            case 8: ing = res.getStrIngredient8(); measure = res.getStrMeasure8(); break;
+                                            case 9: ing = res.getStrIngredient9(); measure = res.getStrMeasure9(); break;
+                                            case 10: ing = res.getStrIngredient10(); measure = res.getStrMeasure10(); break;
+                                            case 11: ing = res.getStrIngredient11(); measure = res.getStrMeasure11(); break;
+                                            case 12: ing = res.getStrIngredient12(); measure = res.getStrMeasure12(); break;
+                                            case 13: ing = res.getStrIngredient13(); measure = res.getStrMeasure13(); break;
+                                            case 14: ing = res.getStrIngredient14(); measure = res.getStrMeasure14(); break;
+                                            case 15: ing = res.getStrIngredient15(); measure = res.getStrMeasure15(); break;
+                                            case 16: ing = res.getStrIngredient16(); measure = res.getStrMeasure16(); break;
+                                            case 17: ing = res.getStrIngredient17(); measure = res.getStrMeasure17(); break;
+                                            case 18: ing = res.getStrIngredient18(); measure = res.getStrMeasure18(); break;
+                                            case 19: ing = res.getStrIngredient19(); measure = res.getStrMeasure19(); break;
+                                            case 20: ing = res.getStrIngredient20(); measure = res.getStrMeasure20(); break;
                                         }
                                         if (ing != null && !ing.trim().isEmpty()) {
                                             String line = ing.trim();
@@ -321,4 +308,14 @@ public class HomeFragment extends Fragment {
         recipeAdapter = null;
         shimmerLayout.stopShimmer();
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // This will re-fetch the list every time you return to HomeFragment
+        if (!isSearching) {
+            loadRecipes();
+        }
+    }
+
 }

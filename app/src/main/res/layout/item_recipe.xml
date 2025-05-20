@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_margin="8dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp">
@@ -38,6 +38,8 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
+
+
         <TextView
             android:id="@+id/recipe_ingredients"
             android:layout_width="0dp"
@@ -48,6 +50,7 @@
             android:background="#F5F5F5"
             android:textSize="14sp"
             android:textColor="#000000"
+            android:visibility="gone"
             android:maxLines="2"
             android:ellipsize="end"
             tools:text="Ingredients: Flour, Eggs, Milk, Sugar"
@@ -123,8 +126,23 @@
                 android:layout_weight="1"
                 android:textAppearance="?attr/textAppearanceBody2" />
 
+
+            <ImageView
+                android:id="@+id/like_button"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/like"
+                app:srcCompat="@drawable/ic_favorite_border_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/recipe_title"/>
+
+
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </com.google.android.material.card.MaterialCardView>

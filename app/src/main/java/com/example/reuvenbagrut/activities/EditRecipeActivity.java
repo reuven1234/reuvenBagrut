@@ -148,7 +148,7 @@ public class EditRecipeActivity extends AppCompatActivity {
 
         // Update recipe
         recipe.setStrMeal(title);
-        recipe.setIngredients(android.text.TextUtils.join(",", ingredients));
+        recipe.setIngredients(ingredients);
         recipe.setStrInstructions(instructions);
         recipe.setStrCookingTime(cookingTimeStr);
         recipe.setStrDifficultyLevel(difficulty);

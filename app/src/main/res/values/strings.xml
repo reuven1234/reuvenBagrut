@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FoodPal</string>
-    
+
     <!-- Auth -->
     <string name="welcome_message">Welcome to FoodPal</string>
     <string name="welcome_subtitle">Discover, create, and share delicious recipes with food lovers around the world</string>
@@ -26,7 +26,7 @@
     <string name="error_recipe_not_found">Recipe not found</string>
     <string name="error_login_to_favorite">Please log in to favorite recipes</string>
     <string name="error_posting_comment">Failed to post comment</string>
-    
+
     <!-- Home Fragment -->
     <string name="discover_recipes">Discover Recipes</string>
     <string name="find_favorite_recipes">Find your favorite recipes</string>
@@ -36,7 +36,7 @@
     <string name="no_recipes_available">No recipes available</string>
     <string name="recipe_id_not_available">Recipe ID not available</string>
     <string name="no_uploaded_recipes">You haven\'t uploaded any recipes yet</string>
-    
+
     <!-- Add Recipe Fragment -->
     <string name="add_new_recipe">Add New Recipe</string>
     <string name="recipe_name_hint">Recipe Name</string>
@@ -44,7 +44,7 @@
     <string name="instructions_hint">Instructions</string>
     <string name="add_photo">Add Photo</string>
     <string name="add_recipe">Add Recipe</string>
-    
+
     <!-- Recipe Detail -->
     <string name="ingredients">Ingredients</string>
     <string name="instructions">Instructions</string>
@@ -54,35 +54,35 @@
     <string name="share_recipe">Share recipe</string>
     <string name="edit_recipe">Edit recipe</string>
     <string name="delete_recipe">Delete recipe</string>
-    
+
     <!-- Comments -->
     <string name="user_profile_image">User profile image</string>
     <string name="like">Like</string>
     <string name="reply">Reply</string>
     <string name="comment_time_format">%1$s ago</string>
     <string name="post_comment">Post Comment</string>
-    
+
     <!-- Images -->
     <string name="recipe_image_description">Recipe image</string>
     <string name="recipe_photo_description">Recipe photo preview</string>
-    
+
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_add">Add Recipe</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_settings">Settings</string>
     <string name="search_recipes">Search Recipes</string>
-    
+
     <!-- Profile Tabs -->
     <string name="tab_uploaded">My Recipes</string>
     <string name="tab_liked">Favorites</string>
-    
+
     <!-- Common -->
     <string name="error_generic">Something went wrong</string>
     <string name="error_no_internet">No internet connection</string>
     <string name="error_try_again">Please try again</string>
     <string name="coming_soon">Coming soon</string>
-    
+
     <!-- Error Messages -->
     <string name="error_loading_recipes">Error loading recipes. Please try again.</string>
     <string name="error_not_authenticated">Please login to add recipes</string>
@@ -106,11 +106,11 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
-    
+
     <!-- Success Messages -->
     <string name="recipe_added_success">Recipe added successfully</string>
     <string name="logout_success">Successfully logged out</string>
-    
+
     <!-- Profile -->
     <string name="anonymous">Anonymous</string>
     <string name="hello_user_format">Hello, %1$s</string>
@@ -129,17 +129,17 @@
     <string name="following">Following</string>
     <string name="uploaded_recipes">Uploaded Recipes</string>
     <string name="liked_recipes">Liked Recipes</string>
-    
+
     <!-- Actions -->
     <string name="select_picture">Select Picture</string>
     <string name="change_photo">Change Photo</string>
-    
+
     <!-- Empty States -->
     <string name="no_liked_recipes">You haven\'t liked any recipes yet</string>
-    
+
     <!-- Legacy (To be removed) -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    
+
     <!-- Recipe strings -->
     <string name="recipe_image">Recipe image</string>
     <string name="author_image">Author Image</string>
@@ -151,23 +151,23 @@
     <string name="clear_filters">Clear Filters</string>
     <string name="error_title">Error</string>
     <string name="unknown_error">An unknown error occurred</string>
-    
+
     <!-- Recipe Edit -->
     <string name="recipe_title">Recipe Title</string>
     <string name="recipe_description">Recipe Description</string>
     <string name="cooking_time">Cooking Time</string>
     <string name="difficulty_level">Difficulty Level</string>
     <string name="save_recipe">Save Recipe</string>
-    
+
     <!-- Search -->
     <string name="no_results_found">No recipes found</string>
-    
+
     <!-- Favorites -->
     <string name="no_favorites">No favorite recipes yet</string>
-    
+
     <!-- Notifications -->
     <string name="no_notifications">No notifications</string>
-    
+
     <!-- Navigation -->
     <string name="home">Home</string>
     <string name="favorites">Favorites</string>
@@ -175,17 +175,17 @@
     <string name="settings">Settings</string>
     <string name="recipe_details">Recipe Details</string>
     <string name="user_profile">User Profile</string>
-    
+
     <!-- New error messages -->
     <string name="error_empty_search">Please enter a search term</string>
     <string name="error_searching">Error searching recipes</string>
-    
+
     <!-- New string resources -->
     <string name="search">Search</string>
-    
+
     <!-- New string resources -->
     <string name="profile_image">Profile Image</string>
-    
+
     <!-- New string resources for chat functionality -->
     <string name="title_chat">Chat</string>
     <string name="title_add_recipe">Add Recipe</string>

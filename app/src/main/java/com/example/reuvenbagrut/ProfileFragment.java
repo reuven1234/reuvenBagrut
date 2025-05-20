@@ -2,6 +2,7 @@ package com.example.reuvenbagrut;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.example.reuvenbagrut.adapters.ProfileTabsAdapter;
 import com.example.reuvenbagrut.models.User;
 import com.example.reuvenbagrut.activities.EditProfileActivity;
+import com.example.reuvenbagrut.activities.SettingsActivity;
 
 public class ProfileFragment extends Fragment {
     private ViewPager2 viewPager;
@@ -29,6 +31,7 @@ public class ProfileFragment extends Fragment {
     private TextView followingCountText;
     private TextView bioText;
     private TextView editProfileButton;
+    private View settingsButton;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
 
@@ -61,9 +64,15 @@ public class ProfileFragment extends Fragment {
         followingCountText = view.findViewById(R.id.followingCountText);
         bioText = view.findViewById(R.id.bioText);
         editProfileButton = view.findViewById(R.id.editProfileButton);
+        settingsButton = view.findViewById(R.id.settings);
 
         editProfileButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), EditProfileActivity.class);
+            startActivity(intent);
+        });
+        settingsButton.setOnClickListener(v -> {
+            Log.d("ProfileFragment", "Settings button clicked");
+            Intent intent = new Intent(getActivity(), SettingsActivity.class);
             startActivity(intent);
         });
     }

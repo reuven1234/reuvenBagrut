@@ -27,7 +27,7 @@ public class Recipe implements Parcelable {
     private String userName;
     private String userImage;
     @PropertyName("ingredients")
-    private Object ingredients;
+    private List<String> ingredients;
     @PropertyName("ingredientsString")
     private String ingredientsString;
     private List<String> steps;
@@ -37,13 +37,13 @@ public class Recipe implements Parcelable {
     private List<String> likedBy;
 
     public Recipe() {
-        // Required empty constructor for Firestore
         this.likedBy = new ArrayList<>();
+        this.ingredients = new ArrayList<>();
     }
 
     public Recipe(String id, String strMeal, String strCategory, String strCookingTime,
-                 String strDifficultyLevel, String strMealThumb, String userId,
-                 String userName, String userImage) {
+                  String strDifficultyLevel, String strMealThumb, String userId,
+                  String userName, String userImage) {
         this.id = id;
         this.strMeal = strMeal;
         this.strCategory = strCategory;
@@ -54,6 +54,7 @@ public class Recipe implements Parcelable {
         this.userName = userName;
         this.userImage = userImage;
         this.likedBy = new ArrayList<>();
+        this.ingredients = new ArrayList<>();
     }
 
     protected Recipe(Parcel in) {
@@ -78,6 +79,8 @@ public class Recipe implements Parcelable {
         timestamp = in.readLong();
         likedBy = new ArrayList<>();
         in.readStringList(likedBy);
+        ingredients = in.createStringArrayList();
+        // Note: steps and other custom fields can be added here if needed.
     }
 
     public static final Creator<Recipe> CREATOR = new Creator<Recipe>() {
@@ -119,171 +122,71 @@ public class Recipe implements Parcelable {
         dest.writeString(userImage);
         dest.writeLong(timestamp);
         dest.writeStringList(likedBy);
+        dest.writeStringList(ingredients);
+        // Note: steps and other custom fields can be written here if needed.
     }
 
     // Getters and Setters
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getStrMeal() { return strMeal; }
+    public void setStrMeal(String strMeal) { this.strMeal = strMeal; }
 
-    public String getStrMeal() {
-        return strMeal;
-    }
+    public String getStrCategory() { return strCategory; }
+    public void setStrCategory(String strCategory) { this.strCategory = strCategory; }
 
-    public void setStrMeal(String strMeal) {
-        this.strMeal = strMeal;
-    }
+    public String getStrArea() { return strArea; }
+    public void setStrArea(String strArea) { this.strArea = strArea; }
 
-    public String getStrCategory() {
-        return strCategory;
-    }
+    public String getStrInstructions() { return strInstructions; }
+    public void setStrInstructions(String strInstructions) { this.strInstructions = strInstructions; }
 
-    public void setStrCategory(String strCategory) {
-        this.strCategory = strCategory;
-    }
+    public String getStrMealThumb() { return strMealThumb; }
+    public void setStrMealThumb(String strMealThumb) { this.strMealThumb = strMealThumb; }
 
-    public String getStrArea() {
-        return strArea;
-    }
+    public String getStrTags() { return strTags; }
+    public void setStrTags(String strTags) { this.strTags = strTags; }
 
-    public void setStrArea(String strArea) {
-        this.strArea = strArea;
-    }
+    public String getStrYoutube() { return strYoutube; }
+    public void setStrYoutube(String strYoutube) { this.strYoutube = strYoutube; }
 
-    public String getStrInstructions() {
-        return strInstructions;
-    }
+    public String getStrSource() { return strSource; }
+    public void setStrSource(String strSource) { this.strSource = strSource; }
 
-    public void setStrInstructions(String strInstructions) {
-        this.strInstructions = strInstructions;
-    }
+    public String getStrCookingTime() { return strCookingTime; }
+    public void setStrCookingTime(String strCookingTime) { this.strCookingTime = strCookingTime; }
 
-    public String getStrMealThumb() {
-        return strMealThumb;
-    }
+    public String getStrServings() { return strServings; }
+    public void setStrServings(String strServings) { this.strServings = strServings; }
 
-    public void setStrMealThumb(String strMealThumb) {
-        this.strMealThumb = strMealThumb;
-    }
+    public String getStrDifficultyLevel() { return strDifficultyLevel; }
+    public void setStrDifficultyLevel(String strDifficultyLevel) { this.strDifficultyLevel = strDifficultyLevel; }
 
-    public String getStrTags() {
-        return strTags;
-    }
+    public String getStrAuthorId() { return strAuthorId; }
+    public void setStrAuthorId(String strAuthorId) { this.strAuthorId = strAuthorId; }
 
-    public void setStrTags(String strTags) {
-        this.strTags = strTags;
-    }
+    public String getStrAuthor() { return strAuthor; }
+    public void setStrAuthor(String strAuthor) { this.strAuthor = strAuthor; }
 
-    public String getStrYoutube() {
-        return strYoutube;
-    }
+    public String getStrAuthorImage() { return strAuthorImage; }
+    public void setStrAuthorImage(String strAuthorImage) { this.strAuthorImage = strAuthorImage; }
 
-    public void setStrYoutube(String strYoutube) {
-        this.strYoutube = strYoutube;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public String getStrSource() {
-        return strSource;
-    }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 
-    public void setStrSource(String strSource) {
-        this.strSource = strSource;
-    }
-
-    public String getStrCookingTime() {
-        return strCookingTime;
-    }
-
-    public void setStrCookingTime(String strCookingTime) {
-        this.strCookingTime = strCookingTime;
-    }
-
-    public String getStrServings() {
-        return strServings;
-    }
-
-    public void setStrServings(String strServings) {
-        this.strServings = strServings;
-    }
-
-    public String getStrDifficultyLevel() {
-        return strDifficultyLevel;
-    }
-
-    public void setStrDifficultyLevel(String strDifficultyLevel) {
-        this.strDifficultyLevel = strDifficultyLevel;
-    }
-
-    public String getStrAuthorId() {
-        return strAuthorId;
-    }
-
-    public void setStrAuthorId(String strAuthorId) {
-        this.strAuthorId = strAuthorId;
-    }
-
-    public String getStrAuthor() {
-        return strAuthor;
-    }
-
-    public void setStrAuthor(String strAuthor) {
-        this.strAuthor = strAuthor;
-    }
-
-    public String getStrAuthorImage() {
-        return strAuthorImage;
-    }
-
-    public void setStrAuthorImage(String strAuthorImage) {
-        this.strAuthorImage = strAuthorImage;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getUserImage() {
-        return userImage;
-    }
-
-    public void setUserImage(String userImage) {
-        this.userImage = userImage;
-    }
+    public String getUserImage() { return userImage; }
+    public void setUserImage(String userImage) { this.userImage = userImage; }
 
     @PropertyName("ingredients")
     public List<String> getIngredients() {
-        if (ingredients == null) return new ArrayList<>();
-        if (ingredients instanceof String) {
-            List<String> list = new ArrayList<>();
-            for (String s : ((String) ingredients).split(",")) {
-                list.add(s.trim());
-            }
-            return list;
-        } else if (ingredients instanceof List) {
-            //noinspection unchecked
-            return (List<String>) ingredients;
-        }
-        return new ArrayList<>();
+        return ingredients == null ? new ArrayList<>() : ingredients;
     }
-
     @PropertyName("ingredients")
-    public void setIngredients(Object ingredients) {
+    public void setIngredients(List<String> ingredients) {
         this.ingredients = ingredients;
     }
 
@@ -292,45 +195,20 @@ public class Recipe implements Parcelable {
         this.ingredientsString = ingredientsString;
     }
 
-    public List<String> getSteps() {
-        return steps;
-    }
+    public List<String> getSteps() { return steps; }
+    public void setSteps(List<String> steps) { this.steps = steps; }
 
-    public void setSteps(List<String> steps) {
-        this.steps = steps;
-    }
+    public int getLikesCount() { return likesCount; }
+    public void setLikesCount(int likesCount) { this.likesCount = likesCount; }
 
-    public int getLikesCount() {
-        return likesCount;
-    }
+    public boolean isLiked() { return isLiked; }
+    public void setLiked(boolean liked) { isLiked = liked; }
 
-    public void setLikesCount(int likesCount) {
-        this.likesCount = likesCount;
-    }
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 
-    public boolean isLiked() {
-        return isLiked;
-    }
-
-    public void setLiked(boolean liked) {
-        isLiked = liked;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public List<String> getLikedBy() {
-        return likedBy;
-    }
-
-    public void setLikedBy(List<String> likedBy) {
-        this.likedBy = likedBy;
-    }
+    public List<String> getLikedBy() { return likedBy; }
+    public void setLikedBy(List<String> likedBy) { this.likedBy = likedBy; }
 
     public boolean isLikedByUser(String userId) {
         return likedBy != null && likedBy.contains(userId);
@@ -350,4 +228,4 @@ public class Recipe implements Parcelable {
             likedBy.remove(userId);
         }
     }
-} 
+}

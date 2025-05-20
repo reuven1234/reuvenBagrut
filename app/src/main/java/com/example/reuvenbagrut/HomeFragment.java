@@ -182,6 +182,19 @@ public class HomeFragment extends Fragment {
                         Recipe r = doc.toObject(Recipe.class);
                         if (r != null) {
                             r.setId(doc.getId());
+                            // Get user information
+                            if (r.getUserId() != null) {
+                                db.collection("users")
+                                    .document(r.getUserId())
+                                    .get()
+                                    .addOnSuccessListener(userDoc -> {
+                                        if (userDoc.exists()) {
+                                            r.setUserName(userDoc.getString("name"));
+                                            r.setUserImage(userDoc.getString("profileImageUrl"));
+                                            recipeAdapter.notifyDataSetChanged();
+                                        }
+                                    });
+                            }
                             list.add(r);
                         }
                     }

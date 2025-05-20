@@ -14,6 +14,7 @@ import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.models.Recipe;
 import java.util.List;
 import com.google.firebase.auth.FirebaseAuth;
+import android.util.Log;
 
 public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
     private Context context;
@@ -47,8 +48,46 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     @Override
     public void onBindViewHolder(@NonNull RecipeViewHolder holder, int position) {
         Recipe recipe = recipes.get(position);
+        
+        // Set recipe title
         holder.recipeTitle.setText(recipe.getStrMeal());
+        
+        // Set user information
         holder.userName.setText(recipe.getUserName());
+        
+        // Set recipe details
+        if (recipe.getStrCookingTime() != null && !recipe.getStrCookingTime().isEmpty()) {
+            holder.recipeTime.setText(recipe.getStrCookingTime());
+            holder.recipeTime.setVisibility(View.VISIBLE);
+        } else {
+            holder.recipeTime.setVisibility(View.GONE);
+        }
+
+        if (recipe.getStrServings() != null && !recipe.getStrServings().isEmpty()) {
+            holder.recipeServings.setText(recipe.getStrServings());
+            holder.recipeServings.setVisibility(View.VISIBLE);
+        } else {
+            holder.recipeServings.setVisibility(View.GONE);
+        }
+
+        if (recipe.getStrCategory() != null && !recipe.getStrCategory().isEmpty()) {
+            holder.recipeCategory.setText(recipe.getStrCategory());
+            holder.recipeCategory.setVisibility(View.VISIBLE);
+        } else {
+            holder.recipeCategory.setVisibility(View.GONE);
+        }
+
+        // Set ingredients
+        List<String> ingredients = recipe.getIngredients();
+        Log.d("RecipeAdapter", "Recipe: " + recipe.getStrMeal() + ", Ingredients: " + ingredients);
+        if (ingredients != null && !ingredients.isEmpty()) {
+            String joined = android.text.TextUtils.join(", ", ingredients);
+            holder.recipeIngredients.setText("Ingredients: " + joined);
+            holder.recipeIngredients.setVisibility(View.VISIBLE);
+        } else {
+            holder.recipeIngredients.setText("No ingredients available");
+            holder.recipeIngredients.setVisibility(View.VISIBLE);
+        }
 
         // Load recipe image
         if (recipe.getStrMealThumb() != null && !recipe.getStrMealThumb().isEmpty()) {
@@ -74,7 +113,13 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
         });
 
         holder.userImage.setOnClickListener(v -> {
-            if (listener != null) {
+            if (listener != null && recipe.getUserId() != null) {
+                listener.onUserClick(recipe.getUserId());
+            }
+        });
+        
+        holder.userName.setOnClickListener(v -> {
+            if (listener != null && recipe.getUserId() != null) {
                 listener.onUserClick(recipe.getUserId());
             }
         });
@@ -90,7 +135,10 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
         ImageView userImage;
         TextView recipeTitle;
         TextView userName;
-        // ImageButton likeButton; // Remove or comment out if not in layout
+        TextView recipeTime;
+        TextView recipeServings;
+        TextView recipeCategory;
+        TextView recipeIngredients;
 
         RecipeViewHolder(View itemView) {
             super(itemView);
@@ -98,7 +146,10 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
             userImage = itemView.findViewById(R.id.authorImage);
             recipeTitle = itemView.findViewById(R.id.recipe_title);
             userName = itemView.findViewById(R.id.authorName);
-            // likeButton = itemView.findViewById(R.id.likeButton); // Remove or comment out if not in layout
+            recipeTime = itemView.findViewById(R.id.recipeTime);
+            recipeServings = itemView.findViewById(R.id.recipeServings);
+            recipeCategory = itemView.findViewById(R.id.recipeCategory);
+            recipeIngredients = itemView.findViewById(R.id.recipe_ingredients);
         }
     }
 } 

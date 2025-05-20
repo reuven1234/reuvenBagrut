@@ -22,9 +22,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +36,10 @@ public class RecipeDetailActivity extends AppCompatActivity {
     private MaterialTextView recipeCategory;
     private MaterialTextView recipeIngredients;
     private MaterialTextView recipeInstructions;
+
     private ShapeableImageView userProfileImage;
     private MaterialTextView userName;
+
     private RecyclerView commentsRecyclerView;
     private TextInputEditText commentInput;
     private MaterialButton postCommentButton;
@@ -47,7 +49,9 @@ public class RecipeDetailActivity extends AppCompatActivity {
     private FirebaseUser currentUser;
     private CommentAdapter commentAdapter;
     private List<Comment> comments;
+
     private String recipeId;
+    private String recipeUserId;    // ← the UID of who created this recipe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,16 +60,19 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
         initializeViews();
 
-        // Get recipe from intent
+        // Grab the Recipe object passed in
         Recipe recipe = getIntent().getParcelableExtra("recipe");
         if (recipe == null) {
-            Toast.makeText(this, R.string.error_recipe_not_found, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    R.string.error_recipe_not_found,
+                    Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
-        recipeId = recipe.getId();
+        recipeId     = recipe.getId();
+        recipeUserId = recipe.getUserId();  // make sure your Recipe model has this!
 
-        // Populate UI
+        // Populate recipe fields
         collapsingToolbar.setTitle(recipe.getStrMeal());
         if (recipe.getStrCategory() != null) {
             recipeCategory.setText(recipe.getStrCategory());
@@ -85,6 +92,8 @@ public class RecipeDetailActivity extends AppCompatActivity {
             }
             recipeIngredients.setText(sb.toString());
         }
+
+        // Show creator’s name & photo
         if (recipe.getUserName() != null) {
             userName.setText(recipe.getUserName());
         }
@@ -95,6 +104,11 @@ public class RecipeDetailActivity extends AppCompatActivity {
                     .into(userProfileImage);
         }
 
+        // ➜ Here’s the new bit: clicking name or image opens their profile
+        userName.setOnClickListener(v -> openUserProfile());
+        userProfileImage.setOnClickListener(v -> openUserProfile());
+
+        // Firestore & UI setup
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -126,18 +140,34 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
         comments = new ArrayList<>();
         commentAdapter = new CommentAdapter(this, comments, comment -> {
-            Intent i = new Intent(RecipeDetailActivity.this, UserProfileActivity.class);
+            Intent i = new Intent(
+                    RecipeDetailActivity.this,
+                    UserProfileActivity.class
+            );
             i.putExtra("userId", comment.getUserId());
             startActivity(i);
         });
-        commentsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        commentsRecyclerView.setLayoutManager(
+                new LinearLayoutManager(this)
+        );
         commentsRecyclerView.setAdapter(commentAdapter);
+    }
+
+    private void openUserProfile() {
+        Intent intent = new Intent(
+                RecipeDetailActivity.this,
+                UserProfileActivity.class
+        );
+        intent.putExtra("userId", recipeUserId);
+        startActivity(intent);
     }
 
     private void setupFavoriteButton() {
         favoriteButton.setOnClickListener(v -> {
             if (currentUser == null) {
-                Toast.makeText(this, R.string.error_login_to_favorite, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        R.string.error_login_to_favorite,
+                        Toast.LENGTH_SHORT).show();
                 return;
             }
             // TODO: implement favorite toggling
@@ -165,6 +195,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
     private void postComment(String text) {
         Comment comment = new Comment();
+        comment.setRecipeId(recipeId);
         comment.setUserId(currentUser.getUid());
         comment.setUserName(currentUser.getDisplayName());
         comment.setUserImage(
@@ -172,7 +203,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
                         ? currentUser.getPhotoUrl().toString()
                         : null
         );
-        comment.setText(text);
+        comment.setContent(text);
         comment.setTimestamp(System.currentTimeMillis());
 
         db.collection("recipes")

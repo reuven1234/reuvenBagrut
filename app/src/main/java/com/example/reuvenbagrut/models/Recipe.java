@@ -18,6 +18,7 @@ public class Recipe implements Parcelable {
     private String strYoutube;
     private String strSource;
     private String strCookingTime;
+    private String strServings;
     private String strDifficultyLevel;
     private String strAuthorId;
     private String strAuthor;
@@ -66,6 +67,7 @@ public class Recipe implements Parcelable {
         strYoutube = in.readString();
         strSource = in.readString();
         strCookingTime = in.readString();
+        strServings = in.readString();
         strDifficultyLevel = in.readString();
         strAuthorId = in.readString();
         strAuthor = in.readString();
@@ -107,6 +109,7 @@ public class Recipe implements Parcelable {
         dest.writeString(strYoutube);
         dest.writeString(strSource);
         dest.writeString(strCookingTime);
+        dest.writeString(strServings);
         dest.writeString(strDifficultyLevel);
         dest.writeString(strAuthorId);
         dest.writeString(strAuthor);
@@ -197,6 +200,14 @@ public class Recipe implements Parcelable {
 
     public void setStrCookingTime(String strCookingTime) {
         this.strCookingTime = strCookingTime;
+    }
+
+    public String getStrServings() {
+        return strServings;
+    }
+
+    public void setStrServings(String strServings) {
+        this.strServings = strServings;
     }
 
     public String getStrDifficultyLevel() {

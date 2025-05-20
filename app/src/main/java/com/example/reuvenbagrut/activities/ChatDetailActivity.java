@@ -2,7 +2,6 @@ package com.example.reuvenbagrut.activities;
 
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.adapters.ChatAdapter;
-import com.example.reuvenbagrut.models.Chat;
 import com.example.reuvenbagrut.models.ChatMessage;
 import com.example.reuvenbagrut.models.User;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -34,89 +32,110 @@ public class ChatDetailActivity extends AppCompatActivity {
     private CircularProgressIndicator progressBar;
     private ChatAdapter chatAdapter;
     private List<ChatMessage> messages;
+
     private String chatId;
     private String otherUserId;
-    private FirebaseFirestore db;
     private String currentUserId;
+    private String currentUserName;
+    private String currentUserImage;
+
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_detail);
 
-        // Initialize Firebase
         db = FirebaseFirestore.getInstance();
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Get chat data from intent
+        // Get Intent extras
         chatId = getIntent().getStringExtra("chatId");
         otherUserId = getIntent().getStringExtra("otherUserId");
-
-        if (chatId == null) {
-            Toast.makeText(this, "Error: Chat ID not found", Toast.LENGTH_SHORT).show();
+        if (chatId == null || otherUserId == null) {
+            Toast.makeText(this,
+                    "Error: chat data missing",
+                    Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // Initialize views
-        toolbar = findViewById(R.id.toolbar);
+        // View binding
+        toolbar      = findViewById(R.id.toolbar);
         recyclerView = findViewById(R.id.recyclerView);
         messageInput = findViewById(R.id.messageInput);
-        progressBar = findViewById(R.id.progressBar);
+        progressBar  = findViewById(R.id.progressBar);
 
-        // Setup toolbar
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        // Load other user's data
         loadOtherUserData();
+        loadCurrentUserData();
 
-        // Setup RecyclerView
-        messages = new ArrayList<>();
+        messages    = new ArrayList<>();
         chatAdapter = new ChatAdapter(this, messages, currentUserId);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(chatAdapter);
 
-        // Load messages
         loadMessages();
 
-        // Setup send button
         findViewById(R.id.sendButton).setOnClickListener(v -> sendMessage());
     }
 
     private void loadOtherUserData() {
-        db.collection("users").document(otherUserId)
+        db.collection("users")
+                .document(otherUserId)
                 .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    User otherUser = documentSnapshot.toObject(User.class);
-                    if (otherUser != null) {
-                        toolbar.setTitle(otherUser.getName());
+                .addOnSuccessListener(doc -> {
+                    User other = doc.toObject(User.class);
+                    if (other != null) {
+                        toolbar.setTitle(other.getName());
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error loading user data", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Error loading user data",
+                            Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void loadCurrentUserData() {
+        db.collection("users")
+                .document(currentUserId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    User current = documentSnapshot.toObject(User.class);
+                    if (current != null) {
+                        currentUserName  = current.getName();
+                        currentUserImage = current.getImageUrl();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // Name/image may remain null, but sending still works
                 });
     }
 
     private void loadMessages() {
-        progressBar.setVisibility(View.VISIBLE);
-        db.collection("chats").document(chatId)
+        progressBar.setVisibility(CircularProgressIndicator.VISIBLE);
+        db.collection("chats")
+                .document(chatId)
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Toast.makeText(this, "Error loading messages", Toast.LENGTH_SHORT).show();
-                        progressBar.setVisibility(View.GONE);
+                .addSnapshotListener((snap, err) -> {
+                    if (err != null) {
+                        Toast.makeText(this,
+                                "Error loading messages",
+                                Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(CircularProgressIndicator.GONE);
                         return;
                     }
-
-                    messages.clear();
-                    if (value != null) {
-                        for (DocumentSnapshot doc : value.getDocuments()) {
-                            ChatMessage message = doc.toObject(ChatMessage.class);
-                            if (message != null) {
-                                messages.add(message);
+                    if (snap != null) {
+                        messages.clear();
+                        for (DocumentSnapshot d : snap.getDocuments()) {
+                            ChatMessage msg = d.toObject(ChatMessage.class);
+                            if (msg != null) {
+                                messages.add(msg);
                             }
                         }
                         chatAdapter.notifyDataSetChanged();
@@ -124,35 +143,42 @@ public class ChatDetailActivity extends AppCompatActivity {
                             recyclerView.smoothScrollToPosition(messages.size() - 1);
                         }
                     }
-                    progressBar.setVisibility(View.GONE);
+                    progressBar.setVisibility(CircularProgressIndicator.GONE);
                 });
     }
 
     private void sendMessage() {
-        String messageText = messageInput.getText().toString().trim();
-        if (messageText.isEmpty()) {
-            return;
-        }
+        String text = messageInput.getText().toString().trim();
+        if (text.isEmpty()) return;
 
-        ChatMessage message = new ChatMessage(
+        ChatMessage msg = new ChatMessage(
                 currentUserId,
-                currentUserId,
-                currentUserId,
-                messageText
+                currentUserName,
+                currentUserImage,
+                text
         );
 
-        db.collection("chats").document(chatId)
+        db.collection("chats")
+                .document(chatId)
                 .collection("messages")
-                .add(message)
-                .addOnSuccessListener(documentReference -> {
+                .add(msg)
+                .addOnSuccessListener(ref -> {
                     messageInput.setText("");
-                    // Update last message in chat document
-                    db.collection("chats").document(chatId)
-                            .update("lastMessage", messageText,
-                                    "lastMessageTimestamp", new Date());
+                    // Update chat summary
+                    db.collection("chats")
+                            .document(chatId)
+                            .update(
+                                    "lastMessage", text,
+                                    "lastMessageTime", msg.getTimestamp(),
+                                    "lastMessageSenderId", currentUserId,
+                                    "lastMessageSenderName", currentUserName,
+                                    "lastMessageSenderImage", currentUserImage
+                            );
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error sending message", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Error sending message",
+                            Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -164,4 +190,4 @@ public class ChatDetailActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-} 
+}

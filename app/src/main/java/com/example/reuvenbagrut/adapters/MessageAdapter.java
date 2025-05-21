@@ -60,17 +60,17 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
     class MessageViewHolder extends RecyclerView.ViewHolder {
         private final MaterialTextView messageText;
-        private final MaterialTextView messageTime;
+        private final MaterialTextView timeText;
 
         public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.messageText);
-            messageTime = itemView.findViewById(R.id.messageTime);
+            timeText = itemView.findViewById(R.id.timeText);
         }
 
         public void bind(Message message) {
             messageText.setText(message.getContent());
-            messageTime.setText(timeFormat.format(new Date(message.getTimestamp())));
+            timeText.setText(timeFormat.format(new Date(message.getTimestamp())));
         }
     }
 } 

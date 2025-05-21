@@ -11,11 +11,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.models.ChatMessage;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    private static final int VIEW_TYPE_SENT = 0;
-    private static final int VIEW_TYPE_RECEIVED = 1;
+public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
+    private static final int VIEW_TYPE_SENT = 1;
+    private static final int VIEW_TYPE_RECEIVED = 2;
 
     private Context context;
     private List<ChatMessage> messages;
@@ -30,46 +33,35 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public int getItemViewType(int position) {
         ChatMessage message = messages.get(position);
-        return message.getSenderId().equals(currentUserId) ? VIEW_TYPE_SENT : VIEW_TYPE_RECEIVED;
+        if (message.getSenderId().equals(currentUserId)) {
+            return VIEW_TYPE_SENT;
+        } else {
+            return VIEW_TYPE_RECEIVED;
+        }
     }
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view;
         if (viewType == VIEW_TYPE_SENT) {
             view = LayoutInflater.from(context).inflate(R.layout.item_message_sent, parent, false);
-            return new SentMessageViewHolder(view);
         } else {
             view = LayoutInflater.from(context).inflate(R.layout.item_message_received, parent, false);
-            return new ReceivedMessageViewHolder(view);
         }
+        return new MessageViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         ChatMessage message = messages.get(position);
-
-        if (holder instanceof SentMessageViewHolder) {
-            SentMessageViewHolder sentHolder = (SentMessageViewHolder) holder;
-            sentHolder.messageText.setText(message.getMessage());
-            sentHolder.timeText.setText(message.getFormattedTime());
-            if (message.getSenderImage() != null && !message.getSenderImage().isEmpty()) {
-                Glide.with(context)
-                    .load(message.getSenderImage())
-                    .circleCrop()
-                    .into(sentHolder.profileImage);
-            }
-        } else if (holder instanceof ReceivedMessageViewHolder) {
-            ReceivedMessageViewHolder receivedHolder = (ReceivedMessageViewHolder) holder;
-            receivedHolder.messageText.setText(message.getMessage());
-            receivedHolder.timeText.setText(message.getFormattedTime());
-            if (message.getSenderImage() != null && !message.getSenderImage().isEmpty()) {
-                Glide.with(context)
-                    .load(message.getSenderImage())
-                    .circleCrop()
-                    .into(receivedHolder.profileImage);
-            }
+        holder.messageText.setText(message.getText());
+        holder.timeText.setText(formatTime(message.getTimestamp()));
+        if (message.getSenderImage() != null && !message.getSenderImage().isEmpty()) {
+            Glide.with(context)
+                .load(message.getSenderImage())
+                .circleCrop()
+                .into(holder.profileImage);
         }
     }
 
@@ -78,25 +70,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messages.size();
     }
 
-    static class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText;
-        TextView timeText;
-        ImageView profileImage;
-
-        SentMessageViewHolder(View itemView) {
-            super(itemView);
-            messageText = itemView.findViewById(R.id.messageText);
-            timeText = itemView.findViewById(R.id.timeText);
-            profileImage = itemView.findViewById(R.id.profileImage);
-        }
+    private String formatTime(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
     }
 
-    static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
+    static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText;
         TextView timeText;
         ImageView profileImage;
 
-        ReceivedMessageViewHolder(View itemView) {
+        MessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.messageText);
             timeText = itemView.findViewById(R.id.timeText);

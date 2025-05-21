@@ -207,7 +207,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
             messageCreatorButton.setVisibility(android.view.View.VISIBLE);
             messageCreatorButton.setOnClickListener(v -> {
                 // Open chat with the creator
-                Intent chatIntent = new Intent(RecipeDetailActivity.this, ChatFragment.class);
+                Intent chatIntent = new Intent(RecipeDetailActivity.this, ChatActivity.class);
                 chatIntent.putExtra("otherUserId", recipeUserId);
                 chatIntent.putExtra("otherUserName", recipeObj.getUserName());
                 chatIntent.putExtra("otherUserImage", recipeObj.getUserImage());

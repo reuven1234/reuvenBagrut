@@ -41,6 +41,12 @@
             app:destination="@id/navigation_user_profile" />
     </fragment>
 
+    <fragment
+        android:id="@+id/navigation_settings"
+        android:name="com.example.reuvenbagrut.SettingsFragment"
+        android:label="@string/settings"
+        tools:layout="@layout/fragment_settings" />
+
     <activity
         android:id="@+id/navigation_recipe_detail"
         android:name="com.example.reuvenbagrut.RecipeDetailActivity"
@@ -65,5 +71,10 @@
         android:label="@string/user_profile"
         tools:layout="@layout/activity_user_profile" />
 
+    <activity
+        android:id="@+id/navigation_settings"
+        android:name="com.example.reuvenbagrut.activities.SettingsActivity"
+        android:label="@string/settings"
+        tools:layout="@layout/activity_settings" />
 
 </navigation> 

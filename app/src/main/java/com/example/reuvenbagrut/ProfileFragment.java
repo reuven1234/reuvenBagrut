@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -31,7 +32,6 @@ public class ProfileFragment extends Fragment {
     private TextView followingCountText;
     private TextView bioText;
     private TextView editProfileButton;
-    private View settingsButton;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
 
@@ -64,15 +64,9 @@ public class ProfileFragment extends Fragment {
         followingCountText = view.findViewById(R.id.followingCountText);
         bioText = view.findViewById(R.id.bioText);
         editProfileButton = view.findViewById(R.id.editProfileButton);
-        settingsButton = view.findViewById(R.id.settings);
 
         editProfileButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), EditProfileActivity.class);
-            startActivity(intent);
-        });
-        settingsButton.setOnClickListener(v -> {
-            Log.d("ProfileFragment", "Settings button clicked");
-            Intent intent = new Intent(getActivity(), SettingsActivity.class);
             startActivity(intent);
         });
     }

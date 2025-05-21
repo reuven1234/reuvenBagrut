@@ -4,25 +4,26 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.NavigationUI;
-
 public class MainActivity extends AppCompatActivity {
     private MaterialButton signUpButton;
     private MaterialButton loginButton;
     private FirebaseAuth mAuth;
     private boolean keepSplashScreen = true;
+    private NavController navController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,50 +40,87 @@ public class MainActivity extends AppCompatActivity {
             keepSplashScreen = false;
             EdgeToEdge.enable(this);
 
-            // Always inflate the same layout; decide content by login state
             setContentView(R.layout.activity_main);
 
             if (currentUser != null) {
-                setupNavigation();
+                showNavigation();
             } else {
-                initializeViews();
-                setupClickListeners();
+                showLoginScreen();
             }
         }, 1000);
+    }
+
+    private void showLoginScreen() {
+        View loginContainer = findViewById(R.id.login_container);
+        View navHostFragment = findViewById(R.id.nav_host_fragment);
+        View navView = findViewById(R.id.nav_view);
+
+        loginContainer.setVisibility(View.VISIBLE);
+        navHostFragment.setVisibility(View.GONE);
+        navView.setVisibility(View.GONE);
+
+        initializeViews();
+        setupClickListeners();
+    }
+
+    private void showNavigation() {
+        View loginContainer = findViewById(R.id.login_container);
+        View navHostFragment = findViewById(R.id.nav_host_fragment);
+        View navView = findViewById(R.id.nav_view);
+
+        loginContainer.setVisibility(View.GONE);
+        navHostFragment.setVisibility(View.VISIBLE);
+        navView.setVisibility(View.VISIBLE);
+
+        setupNavigation();
     }
 
     private void initializeViews() {
         signUpButton = findViewById(R.id.SignUp);
         loginButton  = findViewById(R.id.Login);
-        signUpButton .setBackgroundTintList(getColorStateList(R.color.primary_color));
-        loginButton  .setBackgroundTintList(getColorStateList(R.color.secondary_color));
+        if (signUpButton != null) {
+            signUpButton.setBackgroundTintList(getColorStateList(R.color.primary_color));
+        }
+        if (loginButton != null) {
+            loginButton.setBackgroundTintList(getColorStateList(R.color.secondary_color));
+        }
     }
 
     private void setupClickListeners() {
-        signUpButton.setOnClickListener(v -> startActivity(new Intent(this, SignUp.class)));
-        loginButton .setOnClickListener(v -> startActivity(new Intent(this, Login.class)));
+        if (signUpButton != null) {
+            signUpButton.setOnClickListener(v -> startActivity(new Intent(this, SignUp.class)));
+        }
+        if (loginButton != null) {
+            loginButton.setOnClickListener(v -> startActivity(new Intent(this, Login.class)));
+        }
     }
 
     private void setupNavigation() {
         BottomNavigationView navView = findViewById(R.id.nav_view);
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupWithNavController(navView, navController);
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment != null) {
+            navController = navHostFragment.getNavController();
+            NavigationUI.setupWithNavController(navView, navController);
 
-        navView.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.navigation_home) {
-                navController.navigate(R.id.navigation_home);
-            } else if (id == R.id.navigation_add_recipe) {
-                navController.navigate(R.id.navigation_add_recipe);
-            } else if (id == R.id.navigation_chat) {
-                navController.navigate(R.id.navigation_chat);
-            } else if (id == R.id.navigation_profile) {
-                navController.navigate(R.id.navigation_profile);
-            } else {
-                return false;
-            }
-            return true;
-        });
+            navView.setOnItemSelectedListener(item -> {
+                int id = item.getItemId();
+                if (id == R.id.navigation_home) {
+                    navController.navigate(R.id.navigation_home);
+                } else if (id == R.id.navigation_add_recipe) {
+                    navController.navigate(R.id.navigation_add_recipe);
+                } else if (id == R.id.navigation_chat) {
+                    navController.navigate(R.id.navigation_chat);
+                } else if (id == R.id.navigation_profile) {
+                    navController.navigate(R.id.navigation_profile);
+                } else if (id == R.id.navigation_settings) {
+                    navController.navigate(R.id.navigation_settings);
+                } else {
+                    return false;
+                }
+                return true;
+            });
+        }
     }
 
     @Override
@@ -90,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         // If user got signed in during welcome flow
         if (mAuth.getCurrentUser() != null && !keepSplashScreen) {
-            setupNavigation();
+            showNavigation();
         }
     }
 }

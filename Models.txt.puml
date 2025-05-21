@@ -1,0 +1,364 @@
+@startuml
+class com.example.reuvenbagrut.models.Recipe {
+- String id
+- String strMeal
+- String strCategory
+- String strArea
+- String strInstructions
+- String strMealThumb
+- String strTags
+- String strYoutube
+- String strSource
+- String strCookingTime
+- String strServings
+- String strDifficultyLevel
+- String strAuthorId
+- String strAuthor
+- String strAuthorImage
+- String userId
+- String userName
+- String userImage
+- List<String> ingredients
+- String ingredientsString
+- List<String> steps
+- int likesCount
+- boolean isLiked
+- long timestamp
+- List<String> likedBy
++ {static} Creator<Recipe> CREATOR
++ int describeContents()
++ void writeToParcel(Parcel,int)
++ String getId()
++ void setId(String)
++ String getStrMeal()
++ void setStrMeal(String)
++ String getStrCategory()
++ void setStrCategory(String)
++ String getStrArea()
++ void setStrArea(String)
++ String getStrInstructions()
++ void setStrInstructions(String)
++ String getStrMealThumb()
++ void setStrMealThumb(String)
++ String getStrTags()
++ void setStrTags(String)
++ String getStrYoutube()
++ void setStrYoutube(String)
++ String getStrSource()
++ void setStrSource(String)
++ String getStrCookingTime()
++ void setStrCookingTime(String)
++ String getStrServings()
++ void setStrServings(String)
++ String getStrDifficultyLevel()
++ void setStrDifficultyLevel(String)
++ String getStrAuthorId()
++ void setStrAuthorId(String)
++ String getStrAuthor()
++ void setStrAuthor(String)
++ String getStrAuthorImage()
++ void setStrAuthorImage(String)
++ String getUserId()
++ void setUserId(String)
++ String getUserName()
++ void setUserName(String)
++ String getUserImage()
++ void setUserImage(String)
++ List<String> getIngredients()
++ void setIngredients(List<String>)
++ void setIngredientsString(String)
++ List<String> getSteps()
++ void setSteps(List<String>)
++ int getLikesCount()
++ void setLikesCount(int)
++ boolean isLiked()
++ void setLiked(boolean)
++ long getTimestamp()
++ void setTimestamp(long)
++ List<String> getLikedBy()
++ void setLikedBy(List<String>)
++ boolean isLikedByUser(String)
++ void addLike(String)
++ void removeLike(String)
+}
+
+
+interface com.example.reuvenbagrut.api.RecipeApiService {
+~ Call<RecipeApiResponse> searchRecipes(String)
+~ Call<RecipeApiResponse> getRandomRecipes()
+~ Call<RecipeApiResponse> getRecipeById(String)
+~ Call<RecipeApiResponse> getRecipesByCategory(String)
+}
+
+class com.example.reuvenbagrut.models.Chat {
+- String id
+- List<String> participants
+- String lastMessage
+- long lastMessageTime
+- String lastMessageSenderId
+- String lastMessageSenderName
+- String lastMessageSenderImage
++ String getId()
++ void setId(String)
++ List<String> getParticipants()
++ void setParticipants(List<String>)
++ String getLastMessage()
++ void setLastMessage(String)
++ long getLastMessageTime()
++ void setLastMessageTime(long)
++ String getLastMessageSenderId()
++ void setLastMessageSenderId(String)
++ String getLastMessageSenderName()
++ void setLastMessageSenderName(String)
++ String getLastMessageSenderImage()
++ void setLastMessageSenderImage(String)
++ void updateLastMessage(ChatMessage)
++ String getOtherParticipantId(String)
+}
+
+
+class com.example.reuvenbagrut.models.Message {
+- String id
+- String senderId
+- String senderName
+- String content
+- long timestamp
++ String getId()
++ void setId(String)
++ String getSenderId()
++ void setSenderId(String)
++ String getSenderName()
++ void setSenderName(String)
++ String getContent()
++ void setContent(String)
++ long getTimestamp()
++ void setTimestamp(long)
+}
+
+
+class com.example.reuvenbagrut.models.ChatMessage {
+- String id
+- String text
+- String senderId
+- String senderName
+- String senderImage
+- long timestamp
++ String getId()
++ void setId(String)
++ String getText()
++ void setText(String)
++ String getSenderId()
++ void setSenderId(String)
++ String getSenderName()
++ void setSenderName(String)
++ String getSenderImage()
++ void setSenderImage(String)
++ long getTimestamp()
++ void setTimestamp(long)
++ String getFormattedTime()
++ String getMessage()
+}
+
+
+class com.example.reuvenbagrut.api.RetrofitClient {
+- {static} String BASE_URL
+- {static} RetrofitClient instance
+- Retrofit retrofit
+- RecipeApiService apiService
++ {static} RetrofitClient getInstance()
++ RecipeApiService getApiService()
+}
+
+
+class com.example.reuvenbagrut.models.Comment {
+- String id
+- String recipeId
+- String userId
+- String userName
+- String userImage
+- String content
+- long timestamp
++ String getId()
++ void setId(String)
++ String getRecipeId()
++ void setRecipeId(String)
++ String getUserId()
++ void setUserId(String)
++ String getUserName()
++ void setUserName(String)
++ String getUserImage()
++ void setUserImage(String)
++ String getContent()
++ void setContent(String)
++ long getTimestamp()
++ void setTimestamp(long)
+}
+
+
+class com.example.reuvenbagrut.models.User {
+- String id
+- String email
+- String name
+- String profileImageUrl
+- String password
+- String bio
+- String imageUrl
+- List<String> followers
+- List<String> following
+- List<String> likedRecipes
+- List<String> uploadedRecipes
++ String getId()
++ void setId(String)
++ String getEmail()
++ void setEmail(String)
++ String getName()
++ void setName(String)
++ String getProfileImageUrl()
++ void setProfileImageUrl(String)
++ String getPassword()
++ void setPassword(String)
++ String getBio()
++ void setBio(String)
++ String getImageUrl()
++ void setImageUrl(String)
++ List<String> getFollowers()
++ void setFollowers(List<String>)
++ List<String> getFollowing()
++ void setFollowing(List<String>)
++ List<String> getLikedRecipes()
++ void setLikedRecipes(List<String>)
++ List<String> getUploadedRecipes()
++ void setUploadedRecipes(List<String>)
++ int getFollowersCount()
++ int getFollowingCount()
++ int getUploadedRecipesCount()
++ boolean isFollowing(String)
++ void addFollower(String)
++ void removeFollower(String)
++ void addFollowing(String)
++ void removeFollowing(String)
++ void addLikedRecipe(String)
++ void removeLikedRecipe(String)
++ void addUploadedRecipe(String)
++ void removeUploadedRecipe(String)
++ String getDisplayName()
++ void setDisplayName(String)
++ String getPhotoUrl()
++ void setPhotoUrl(String)
+}
+
+
+class com.example.reuvenbagrut.models.RecipeApiResponse {
+- List<RecipeResult> meals
++ List<RecipeResult> getMeals()
++ void setMeals(List<RecipeResult>)
+}
+
+
+class com.example.reuvenbagrut.models.RecipeApiResponse$RecipeResult {
+- String idMeal
+- String strMeal
+- String strCategory
+- String strArea
+- String strInstructions
+- String strMealThumb
+- String strTags
+- String strYoutube
+- String strSource
+- String strIngredient1
+- String strIngredient2
+- String strIngredient3
+- String strIngredient4
+- String strIngredient5
+- String strIngredient6
+- String strIngredient7
+- String strIngredient8
+- String strIngredient9
+- String strIngredient10
+- String strIngredient11
+- String strIngredient12
+- String strIngredient13
+- String strIngredient14
+- String strIngredient15
+- String strIngredient16
+- String strIngredient17
+- String strIngredient18
+- String strIngredient19
+- String strIngredient20
+- String strMeasure1
+- String strMeasure2
+- String strMeasure3
+- String strMeasure4
+- String strMeasure5
+- String strMeasure6
+- String strMeasure7
+- String strMeasure8
+- String strMeasure9
+- String strMeasure10
+- String strMeasure11
+- String strMeasure12
+- String strMeasure13
+- String strMeasure14
+- String strMeasure15
+- String strMeasure16
+- String strMeasure17
+- String strMeasure18
+- String strMeasure19
+- String strMeasure20
++ String getIdMeal()
++ String getStrMeal()
++ String getStrCategory()
++ String getStrArea()
++ String getStrInstructions()
++ String getStrMealThumb()
++ String getStrTags()
++ String getStrYoutube()
++ String getStrSource()
++ String getStrIngredient1()
++ String getStrIngredient2()
++ String getStrIngredient3()
++ String getStrIngredient4()
++ String getStrIngredient5()
++ String getStrIngredient6()
++ String getStrIngredient7()
++ String getStrIngredient8()
++ String getStrIngredient9()
++ String getStrIngredient10()
++ String getStrIngredient11()
++ String getStrIngredient12()
++ String getStrIngredient13()
++ String getStrIngredient14()
++ String getStrIngredient15()
++ String getStrIngredient16()
++ String getStrIngredient17()
++ String getStrIngredient18()
++ String getStrIngredient19()
++ String getStrIngredient20()
++ String getStrMeasure1()
++ String getStrMeasure2()
++ String getStrMeasure3()
++ String getStrMeasure4()
++ String getStrMeasure5()
++ String getStrMeasure6()
++ String getStrMeasure7()
++ String getStrMeasure8()
++ String getStrMeasure9()
++ String getStrMeasure10()
++ String getStrMeasure11()
++ String getStrMeasure12()
++ String getStrMeasure13()
++ String getStrMeasure14()
++ String getStrMeasure15()
++ String getStrMeasure16()
++ String getStrMeasure17()
++ String getStrMeasure18()
++ String getStrMeasure19()
++ String getStrMeasure20()
+}
+
+
+
+
+android.os.Parcelable <|.. com.example.reuvenbagrut.models.Recipe
+com.example.reuvenbagrut.models.RecipeApiResponse +.. com.example.reuvenbagrut.models.RecipeApiResponse$RecipeResult
+@enduml

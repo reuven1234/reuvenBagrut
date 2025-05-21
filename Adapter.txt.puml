@@ -1,0 +1,136 @@
+@startuml
+class com.example.reuvenbagrut.adapters.ChatListAdapter {
+- Context context
+- List<ChatMessage> messages
+- OnChatClickListener listener
++ ChatViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ChatViewHolder,int)
++ int getItemCount()
+- String formatTime(long)
+}
+
+
+interface com.example.reuvenbagrut.adapters.ChatListAdapter$OnChatClickListener {
+~ void onChatClick(ChatMessage)
+}
+
+class com.example.reuvenbagrut.adapters.ChatListAdapter$ChatViewHolder {
+~ ImageView profileImage
+~ TextView userName
+~ TextView lastMessage
+~ TextView timeText
+}
+
+class com.example.reuvenbagrut.adapters.MessageAdapter {
+- {static} int VIEW_TYPE_SENT
+- {static} int VIEW_TYPE_RECEIVED
+- Context context
+- List<Message> messages
+- String currentUserId
+- SimpleDateFormat timeFormat
++ int getItemViewType(int)
++ MessageViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(MessageViewHolder,int)
++ int getItemCount()
+}
+
+
+class com.example.reuvenbagrut.adapters.MessageAdapter$MessageViewHolder {
+- MaterialTextView messageText
+- MaterialTextView timeText
++ void bind(Message)
+}
+
+
+class com.example.reuvenbagrut.adapters.CommentAdapter {
+- Context context
+- List<Comment> comments
+- OnCommentClickListener listener
++ CommentViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(CommentViewHolder,int)
++ int getItemCount()
+- String formatTime(long)
+}
+
+
+interface com.example.reuvenbagrut.adapters.CommentAdapter$OnCommentClickListener {
+~ void onCommentClick(Comment)
+}
+
+class com.example.reuvenbagrut.adapters.CommentAdapter$CommentViewHolder {
+~ ImageView profileImage
+~ TextView userName
+~ TextView commentText
+~ TextView timeText
+}
+
+class com.example.reuvenbagrut.adapters.ProfileTabsAdapter {
++ Fragment createFragment(int)
++ int getItemCount()
+}
+
+class com.example.reuvenbagrut.adapters.RecipeAdapter {
+- Context context
+- List<Recipe> recipes
+- OnRecipeClickListener listener
++ RecipeViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(RecipeViewHolder,int)
++ int getItemCount()
++ void setRecipes(List<Recipe>)
+}
+
+
+interface com.example.reuvenbagrut.adapters.RecipeAdapter$OnRecipeClickListener {
+~ void onRecipeClick(Recipe)
+}
+
+class com.example.reuvenbagrut.adapters.RecipeAdapter$RecipeViewHolder {
+- ShapeableImageView recipeImage
+- MaterialTextView recipeName
+- MaterialTextView recipeCategory
++ void bind(Recipe)
+}
+
+
+class com.example.reuvenbagrut.adapters.ChatAdapter {
+- {static} int VIEW_TYPE_SENT
+- {static} int VIEW_TYPE_RECEIVED
+- Context context
+- List<ChatMessage> messages
+- String currentUserId
++ int getItemViewType(int)
++ MessageViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(MessageViewHolder,int)
++ int getItemCount()
+- String formatTime(long)
+}
+
+
+class com.example.reuvenbagrut.adapters.ChatAdapter$MessageViewHolder {
+~ TextView messageText
+~ TextView timeText
+~ ImageView profileImage
+}
+
+
+
+com.example.reuvenbagrut.adapters.Adapter <|-- com.example.reuvenbagrut.adapters.ChatListAdapter
+com.example.reuvenbagrut.adapters.ChatListAdapter +.. com.example.reuvenbagrut.adapters.ChatListAdapter$OnChatClickListener
+com.example.reuvenbagrut.adapters.ChatListAdapter +.. com.example.reuvenbagrut.adapters.ChatListAdapter$ChatViewHolder
+com.example.reuvenbagrut.adapters.ViewHolder <|-- com.example.reuvenbagrut.adapters.ChatListAdapter$ChatViewHolder
+com.example.reuvenbagrut.adapters.Adapter <|-- com.example.reuvenbagrut.adapters.MessageAdapter
+com.example.reuvenbagrut.adapters.MessageAdapter +.. com.example.reuvenbagrut.adapters.MessageAdapter$MessageViewHolder
+com.example.reuvenbagrut.adapters.ViewHolder <|-- com.example.reuvenbagrut.adapters.MessageAdapter$MessageViewHolder
+com.example.reuvenbagrut.adapters.Adapter <|-- com.example.reuvenbagrut.adapters.CommentAdapter
+com.example.reuvenbagrut.adapters.CommentAdapter +.. com.example.reuvenbagrut.adapters.CommentAdapter$OnCommentClickListener
+com.example.reuvenbagrut.adapters.CommentAdapter +.. com.example.reuvenbagrut.adapters.CommentAdapter$CommentViewHolder
+com.example.reuvenbagrut.adapters.ViewHolder <|-- com.example.reuvenbagrut.adapters.CommentAdapter$CommentViewHolder
+androidx.viewpager2.adapter.FragmentStateAdapter <|-- com.example.reuvenbagrut.adapters.ProfileTabsAdapter
+com.example.reuvenbagrut.adapters.Adapter <|-- com.example.reuvenbagrut.adapters.RecipeAdapter
+com.example.reuvenbagrut.adapters.RecipeAdapter +.. com.example.reuvenbagrut.adapters.RecipeAdapter$OnRecipeClickListener
+com.example.reuvenbagrut.adapters.RecipeAdapter +.. com.example.reuvenbagrut.adapters.RecipeAdapter$RecipeViewHolder
+com.example.reuvenbagrut.adapters.ViewHolder <|-- com.example.reuvenbagrut.adapters.RecipeAdapter$RecipeViewHolder
+com.example.reuvenbagrut.adapters.Adapter <|-- com.example.reuvenbagrut.adapters.ChatAdapter
+com.example.reuvenbagrut.adapters.ChatAdapter +.. com.example.reuvenbagrut.adapters.ChatAdapter$MessageViewHolder
+com.example.reuvenbagrut.adapters.ViewHolder <|-- com.example.reuvenbagrut.adapters.ChatAdapter$MessageViewHolder
+@enduml

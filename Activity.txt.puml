@@ -1,0 +1,188 @@
+@startuml
+class com.example.reuvenbagrut.activities.RecipeDetailActivity {
+- CollapsingToolbarLayout collapsingToolbar
+- MaterialToolbar toolbar
+- ShapeableImageView recipeImage
+- MaterialTextView recipeCategory
+- MaterialTextView recipeIngredients
+- MaterialTextView recipeInstructions
+- ShapeableImageView userProfileImage
+- MaterialTextView userName
+- MaterialButton messageCreatorButton
+- RecyclerView commentsRecyclerView
+- TextInputEditText commentInput
+- MaterialButton postCommentButton
+- FloatingActionButton favoriteButton
+- FirebaseFirestore db
+- FirebaseUser currentUser
+- CommentAdapter commentAdapter
+- List<Comment> comments
+- String recipeId
+- String recipeUserId
+- Recipe recipeObj
+# void onCreate(Bundle)
+- void initializeViews()
+- void openUserProfile()
+- void setupFavoriteButton()
+- void setupMessageCreatorButton()
+- void setupCommentInput()
+- void setupPostCommentButton()
+- void postComment(String)
+- void loadComments()
+}
+
+
+class com.example.reuvenbagrut.activities.SettingsActivity {
+# void onCreate(Bundle)
+}
+
+class com.example.reuvenbagrut.activities.ChatDetailActivity {
+- MaterialToolbar toolbar
+- RecyclerView recyclerView
+- TextInputEditText messageInput
+- CircularProgressIndicator progressBar
+- ChatAdapter chatAdapter
+- List<ChatMessage> messages
+- String chatId
+- String otherUserId
+- String currentUserId
+- String currentUserName
+- String currentUserImage
+- FirebaseFirestore db
+# void onCreate(Bundle)
+- void loadOtherUserData()
+- void loadCurrentUserData()
+- void loadMessages()
+- void sendMessage()
++ boolean onOptionsItemSelected(MenuItem)
+}
+
+
+class com.example.reuvenbagrut.activities.UserProfileActivity {
+- ShapeableImageView profileImage
+- MaterialTextView userName
+- MaterialTextView userEmail
+- MaterialTextView recipeCount
+- MaterialTextView followersCount
+- MaterialButton messageButton
+- RecyclerView recipesRecyclerView
+- MaterialToolbar toolbar
+- FirebaseFirestore db
+- FirebaseUser currentUser
+- RecipeAdapter recipeAdapter
+- List<Recipe> recipes
+- String profileUserId
+# void onCreate(Bundle)
+- void loadUserProfile(String)
+- void loadUserRecipes(String)
+- void loadFollowersCount(String)
+- void setupMessageButton()
+}
+
+
+class com.example.reuvenbagrut.activities.ChatActivity {
+- MaterialToolbar toolbar
+- RecyclerView recyclerView
+- TextInputEditText messageInput
+- ChatAdapter chatAdapter
+- List<ChatMessage> messages
+- String otherUserId
+- String otherUserName
+- String otherUserImage
+- String currentUserId
+- String chatId
+- FirebaseFirestore db
+# void onCreate(Bundle)
+- String generateChatId(String,String)
+- void loadMessages()
+- void sendMessage()
+}
+
+
+class com.example.reuvenbagrut.activities.EditRecipeActivity {
+- TextInputEditText titleInput
+- TextInputEditText descriptionInput
+- TextInputEditText ingredientsInput
+- TextInputEditText instructionsInput
+- TextInputEditText cookingTimeInput
+- AutoCompleteTextView difficultyInput
+- MaterialButton saveButton
+- CircularProgressIndicator progressIndicator
+- FirebaseFirestore db
+- String recipeId
+- Recipe recipe
+# void onCreate(Bundle)
+- void loadRecipeData()
+- void updateUI()
+- void saveRecipe()
+- void showProgress(boolean)
++ boolean onOptionsItemSelected(MenuItem)
+}
+
+
+class com.example.reuvenbagrut.MainActivity {
+- MaterialButton signUpButton
+- MaterialButton loginButton
+- FirebaseAuth mAuth
+- boolean keepSplashScreen
+- NavController navController
+# void onCreate(Bundle)
+- void showLoginScreen()
+- void showNavigation()
+- void initializeViews()
+- void setupClickListeners()
+- void setupNavigation()
+# void onStart()
+}
+
+
+class com.example.reuvenbagrut.activities.EditProfileActivity {
+- ActivityEditProfileBinding binding
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseStorage storage
+- Uri selectedImageUri
+- ActivityResultLauncher<String> imagePickerLauncher
+# void onCreate(Bundle)
+- void setupToolbar()
+- void setupImagePicker()
+- void loadUserData()
+- void setupSaveButton()
+- void uploadImageAndSaveProfile(String,String)
+- void saveProfile(String,String,String)
++ boolean onOptionsItemSelected(MenuItem)
+}
+
+
+class com.example.reuvenbagrut.activities.SearchActivity {
+- {static} String API_KEY
+- RecyclerView recyclerView
+- RecipeAdapter recipeAdapter
+- SearchView searchView
+- ShimmerFrameLayout shimmerLayout
+- TextView emptyStateText
+# void onCreate(Bundle)
+- void setupToolbar()
+- void initializeViews()
+- void setupRecyclerView()
+- void setupSearchView()
+- void searchRecipes(String)
+- void showLoading(boolean)
+- void showError(String)
++ boolean onOptionsItemSelected(MenuItem)
+# void onDestroy()
+}
+
+
+
+
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.RecipeDetailActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.SettingsActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.ChatDetailActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.UserProfileActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.ChatActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.EditRecipeActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.MainActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.EditProfileActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.reuvenbagrut.activities.SearchActivity
+@enduml

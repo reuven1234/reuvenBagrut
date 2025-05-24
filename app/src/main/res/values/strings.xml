@@ -200,4 +200,8 @@
     <string name="new_chat">New Chat</string>
     <string name="no_chats">No chats yet</string>
     <string name="user_image">User Image</string>
+
+
+    <string name="read_receipt">Read</string>
+
 </resources>

@@ -54,4 +54,13 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+
+    <color name="primaryBlue">#2C3E50</color>
+    <color name="accentBlue">#394867</color>
+    <color name="sentBubble">#2E5AAC</color>
+    <color name="receivedBubble">#ECECEC</color>
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#616161</color>
+
 </resources>

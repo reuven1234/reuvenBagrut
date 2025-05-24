@@ -1,145 +1,77 @@
 package com.example.reuvenbagrut.activities;
 
 import android.os.Bundle;
-import android.widget.Toast;
-
+import android.widget.EditText;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.reuvenbagrut.R;
 import com.example.reuvenbagrut.adapters.ChatAdapter;
 import com.example.reuvenbagrut.models.ChatMessage;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
-    private MaterialToolbar toolbar;
-    private RecyclerView recyclerView;
-    private TextInputEditText messageInput;
-    private ChatAdapter chatAdapter;
-    private List<ChatMessage> messages;
-
-    private String otherUserId;
-    private String otherUserName;
-    private String otherUserImage;
-    private String currentUserId;
-    private String chatId;
-
+    private RecyclerView      recyclerView;
+    private EditText          edtMessage;
+    private ChatAdapter       adapter;
+    private List<ChatMessage> messages = new ArrayList<>();
     private FirebaseFirestore db;
+    private FirebaseUser      currentUser;
+    private String            chatId = "CHAT_ID_HERE"; // TODO: replace
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        // Initialize Firebase
-        db = FirebaseFirestore.getInstance();
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        recyclerView = findViewById(R.id.recyclerChat);
+        edtMessage   = findViewById(R.id.etMessage);
 
-        // Get Intent extras
-        otherUserId = getIntent().getStringExtra("otherUserId");
-        otherUserName = getIntent().getStringExtra("otherUserName");
-        otherUserImage = getIntent().getStringExtra("otherUserImage");
+        db          = FirebaseFirestore.getInstance();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        if (otherUserId == null) {
-            Toast.makeText(this, "Error: User ID not found", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        // Initialize views
-        toolbar = findViewById(R.id.toolbar);
-        recyclerView = findViewById(R.id.recyclerView);
-        messageInput = findViewById(R.id.messageInput);
-
-        // Setup toolbar
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle(otherUserName != null ? otherUserName : "Chat");
-        }
-        toolbar.setNavigationOnClickListener(v -> finish());
-
-        // Setup RecyclerView
-        messages = new ArrayList<>();
-        chatAdapter = new ChatAdapter(this, messages, currentUserId);
+        // 1) Setup RecyclerView + Adapter
+        adapter = new ChatAdapter(messages, currentUser.getUid());
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(chatAdapter);
+        recyclerView.setAdapter(adapter);
 
-        // Generate chat ID (combination of both user IDs)
-        chatId = generateChatId(currentUserId, otherUserId);
-
-        // Setup send button
-        findViewById(R.id.sendButton).setOnClickListener(v -> sendMessage());
-
-        // Load messages
-        loadMessages();
-    }
-
-    private String generateChatId(String userId1, String userId2) {
-        // Sort the IDs to ensure consistent chat ID regardless of who initiates
-        return userId1.compareTo(userId2) < 0 ? 
-            userId1 + "_" + userId2 : 
-            userId2 + "_" + userId1;
-    }
-
-    private void loadMessages() {
+        // 2) Listen for new messages
         db.collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .orderBy("timestamp", Query.Direction.ASCENDING)
-            .addSnapshotListener((snapshots, error) -> {
-                if (error != null) {
-                    Toast.makeText(this, "Error loading messages", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (snapshots != null) {
+                .document(chatId)
+                .collection("messages")
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .addSnapshotListener((snap, err) -> {
+                    if (err != null) return;
                     messages.clear();
-                    for (var doc : snapshots.getDocuments()) {
-                        ChatMessage message = doc.toObject(ChatMessage.class);
-                        if (message != null) {
-                            messages.add(message);
-                        }
+                    for (DocumentSnapshot doc : snap.getDocuments()) {
+                        messages.add(ChatMessage.fromDocument(doc));
                     }
-                    chatAdapter.notifyDataSetChanged();
-                    if (!messages.isEmpty()) {
-                        recyclerView.smoothScrollToPosition(messages.size() - 1);
-                    }
-                }
-            });
+                    adapter.notifyDataSetChanged();
+                    // scroll to bottom
+                    recyclerView.scrollToPosition(messages.size() - 1);
+                });
+
+        // 3) Send button
+        findViewById(R.id.btnSend).setOnClickListener(v -> {
+            String text = edtMessage.getText().toString().trim();
+            if (text.isEmpty()) return;
+            ChatMessage msg = new ChatMessage(
+                    null,
+                    currentUser.getUid(),
+                    text,
+                    System.currentTimeMillis(),
+                    false
+            );
+            db.collection("chats")
+                    .document(chatId)
+                    .collection("messages")
+                    .add(msg);
+            edtMessage.setText("");
+        });
     }
-
-    private void sendMessage() {
-        String messageText = messageInput.getText().toString().trim();
-        if (messageText.isEmpty()) return;
-
-        Map<String, Object> message = new HashMap<>();
-        message.put("text", messageText);
-        message.put("senderId", currentUserId);
-        message.put("senderName", FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
-        message.put("senderImage", FirebaseAuth.getInstance().getCurrentUser().getPhotoUrl() != null ? 
-            FirebaseAuth.getInstance().getCurrentUser().getPhotoUrl().toString() : null);
-        message.put("timestamp", System.currentTimeMillis());
-
-        db.collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .add(message)
-            .addOnSuccessListener(documentReference -> {
-                messageInput.setText("");
-            })
-            .addOnFailureListener(e -> {
-                Toast.makeText(this, "Error sending message", Toast.LENGTH_SHORT).show();
-            });
-    }
-} 
+}

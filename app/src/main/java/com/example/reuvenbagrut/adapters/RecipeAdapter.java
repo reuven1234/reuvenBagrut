@@ -71,14 +71,25 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
         }
 
         public void bind(Recipe recipe) {
-            recipeName.setText(recipe.getStrMeal());
-            recipeCategory.setText(recipe.getStrCategory());
+            if (recipe == null) return;
 
-            if (recipe.getStrMealThumb() != null && !recipe.getStrMealThumb().isEmpty()) {
+            // Set meal name with null check
+            String mealName = recipe.getStrMeal();
+            recipeName.setText(mealName != null ? mealName : "Unknown Recipe");
+
+            // Set category with null check
+            String category = recipe.getStrCategory();
+            recipeCategory.setText(category != null ? category : "Unknown Category");
+
+            // Load image with null check
+            String imageUrl = recipe.getStrMealThumb();
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
                 Glide.with(context)
-                    .load(recipe.getStrMealThumb())
-                    .centerCrop()
-                    .into(recipeImage);
+                        .load(imageUrl)
+                        .centerCrop()
+                        .placeholder(R.drawable.ic_recipe_placeholder)
+                        .error(R.drawable.ic_recipe_placeholder)
+                        .into(recipeImage);
             } else {
                 recipeImage.setImageResource(R.drawable.ic_recipe_placeholder);
             }

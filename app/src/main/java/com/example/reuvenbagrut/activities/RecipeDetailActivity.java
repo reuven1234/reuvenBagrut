@@ -206,16 +206,26 @@ public class RecipeDetailActivity extends AppCompatActivity {
         if (currentUser != null && recipeUserId != null && !currentUser.getUid().equals(recipeUserId)) {
             messageCreatorButton.setVisibility(android.view.View.VISIBLE);
             messageCreatorButton.setOnClickListener(v -> {
+                // Create or get existing chat ID
+                String chatId = createChatId(currentUser.getUid(), recipeUserId);
+                
                 // Open chat with the creator
                 Intent chatIntent = new Intent(RecipeDetailActivity.this, ChatActivity.class);
+                chatIntent.putExtra("chatId", chatId);
                 chatIntent.putExtra("otherUserId", recipeUserId);
                 chatIntent.putExtra("otherUserName", recipeObj.getUserName());
-                chatIntent.putExtra("otherUserImage", recipeObj.getUserImage());
                 startActivity(chatIntent);
             });
         } else {
             messageCreatorButton.setVisibility(android.view.View.GONE);
         }
+    }
+
+    private String createChatId(String userId1, String userId2) {
+        // Create a unique chat ID by sorting user IDs and concatenating them
+        String[] users = {userId1, userId2};
+        java.util.Arrays.sort(users);
+        return users[0] + "_" + users[1];
     }
 
     private void setupCommentInput() {

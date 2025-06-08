@@ -12,15 +12,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.core.widget.NestedScrollView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:overScrollMode="always"
-            android:scrollbars="vertical"
-            android:scrollbarStyle="outsideOverlay"
-            android:clipToPadding="false">
+            android:orientation="vertical">
 
+            <!-- Header Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -119,18 +116,26 @@
                     android:textAppearance="@style/TextAppearance.FoodPal.Headline2"
                     android:textColor="@color/text_primary"/>
 
+            </LinearLayout>
+
+            <!-- Recipe List Container -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
                 <!-- Shimmer Layout -->
                 <com.facebook.shimmer.ShimmerFrameLayout
                     android:id="@+id/shimmerLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_height="match_parent"
                     android:visibility="gone">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
                         <include layout="@layout/item_recipe_shimmer"/>
                         <include layout="@layout/item_recipe_shimmer"/>
@@ -139,51 +144,38 @@
                     </LinearLayout>
                 </com.facebook.shimmer.ShimmerFrameLayout>
 
-                <!-- Recipe List Container -->
-                <FrameLayout
+                <!-- Recipe List -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/popularRecipesRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:padding="16dp"
+                    android:visibility="visible"
+                    tools:listitem="@layout/item_recipe"/>
+
+                <!-- Empty State -->
+                <TextView
+                    android:id="@+id/emptyStateText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp">
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/no_recipes_found"
+                    android:textAppearance="@style/TextAppearance.FoodPal.Body1"
+                    android:textColor="@color/text_secondary"
+                    android:visibility="gone"/>
 
-                    <!-- Recipe List -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/popularRecipesRecyclerView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clipToPadding="false"
-                        android:nestedScrollingEnabled="false"
-                        android:overScrollMode="never"
-                        android:visibility="visible"
-                        tools:listitem="@layout/item_recipe"/>
+                <!-- Progress Bar -->
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone"/>
 
-                    <!-- Empty State -->
-                    <TextView
-                        android:id="@+id/emptyStateText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        android:gravity="center"
-                        android:text="@string/no_recipes_found"
-                        android:textAppearance="@style/TextAppearance.FoodPal.Body1"
-                        android:textColor="@color/text_secondary"
-                        android:visibility="gone"/>
+            </FrameLayout>
 
-                    <!-- Progress Bar -->
-                    <ProgressBar
-                        android:id="@+id/progressBar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:visibility="gone"/>
-
-                </FrameLayout>
-
-                <!-- Add some padding at the bottom for better scrolling experience -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="80dp"/>
-
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

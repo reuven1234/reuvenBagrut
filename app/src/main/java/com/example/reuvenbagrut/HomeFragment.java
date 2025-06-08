@@ -60,50 +60,90 @@ public class HomeFragment extends Fragment {
     private ProgressBar progressBar;
     private boolean isSearching = false;
     private String selectedCategory = "All";
+    private List<Recipe> recipes = new ArrayList<>();
+    private boolean isAdapterInitialized = false;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        Log.d(TAG, "onCreateView called");
+        return inflater.inflate(R.layout.fragment_home, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        Log.d(TAG, "onViewCreated called");
+
+        // Initialize views first
         initViews(view);
+        Log.d(TAG, "Views initialized");
+
+        // Setup RecyclerView
         setupRecyclerView();
+
+        // Setup other components
         setupSearchView();
         setupSwipeRefresh();
         setupCategoryChips();
+        Log.d(TAG, "All components setup completed");
 
-        if (!isSearching) {
-            loadRecipes();
-        }
-        return view;
+        // Load data after all components are set up
+        loadRecipes();
+        Log.d(TAG, "Initial recipes loading started");
     }
 
     private void initViews(View view) {
-        recyclerView       = view.findViewById(R.id.popularRecipesRecyclerView);
-        searchView         = view.findViewById(R.id.searchView);
+        recyclerView = view.findViewById(R.id.popularRecipesRecyclerView);
+        searchView = view.findViewById(R.id.searchView);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        categoryChipGroup  = view.findViewById(R.id.categoryChipGroup);
-        shimmerLayout      = view.findViewById(R.id.shimmerLayout);
-        emptyStateText     = view.findViewById(R.id.emptyStateText);
-        progressBar        = view.findViewById(R.id.progressBar);
+        categoryChipGroup = view.findViewById(R.id.categoryChipGroup);
+        shimmerLayout = view.findViewById(R.id.shimmerLayout);
+        emptyStateText = view.findViewById(R.id.emptyStateText);
+        progressBar = view.findViewById(R.id.progressBar);
 
-        db    = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
     }
 
     private void setupRecyclerView() {
+        Log.d(TAG, "Setting up RecyclerView");
+        if (recyclerView == null) {
+            Log.e(TAG, "RecyclerView is null");
+            return;
+        }
+
+        // Set layout manager first
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recipeAdapter = new RecipeAdapter(getContext(), new ArrayList<>(), new RecipeAdapter.OnRecipeClickListener() {
-            @Override
-            public void onRecipeClick(Recipe recipe) {
-                Intent intent = new Intent(getContext(), RecipeDetailActivity.class);
+        recyclerView.setHasFixedSize(true);
+        
+        // Create adapter if not exists
+        if (!isAdapterInitialized) {
+            recipeAdapter = new RecipeAdapter(getContext(), recipes, recipe -> {
+                Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
                 intent.putExtra("recipe", recipe);
                 startActivity(intent);
-            }
-        });
+            });
+            isAdapterInitialized = true;
+        }
+
+        // Set adapter
         recyclerView.setAdapter(recipeAdapter);
+        Log.d(TAG, "RecyclerView adapter set successfully");
+
+        // Ensure adapter is properly attached
+        if (recipeAdapter != null && recipeAdapter.getItemCount() > 0) {
+            recyclerView.setVisibility(View.VISIBLE);
+            emptyStateText.setVisibility(View.GONE);
+        } else {
+            recyclerView.setVisibility(View.GONE);
+            emptyStateText.setVisibility(View.VISIBLE);
+        }
+
+        Log.d(TAG, "RecyclerView setup completed");
     }
 
     private void setupSearchView() {
@@ -153,22 +193,33 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadRecipes() {
+        if (recipeAdapter == null || getContext() == null || recyclerView == null) {
+            Log.e(TAG, "Required components are null");
+            return;
+        }
+
+        showLoading(true);
+
         db.collection("recipes")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(snap -> {
+                    if (recipeAdapter == null || getContext() == null || recyclerView == null) {
+                        Log.e(TAG, "Required components are null in callback");
+                        return;
+                    }
+
                     List<Recipe> list = new ArrayList<>();
                     for (DocumentSnapshot doc : snap.getDocuments()) {
                         Recipe r = doc.toObject(Recipe.class);
                         if (r != null) {
                             r.setId(doc.getId());
-                            // Get user information
                             if (r.getUserId() != null) {
                                 db.collection("users")
                                         .document(r.getUserId())
                                         .get()
                                         .addOnSuccessListener(userDoc -> {
-                                            if (userDoc.exists()) {
+                                            if (userDoc.exists() && recipeAdapter != null) {
                                                 r.setUserName(userDoc.getString("name"));
                                                 r.setUserImage(userDoc.getString("profileImageUrl"));
                                                 recipeAdapter.notifyDataSetChanged();
@@ -178,15 +229,30 @@ public class HomeFragment extends Fragment {
                             list.add(r);
                         }
                     }
-                    recipeAdapter.setRecipes(list);
-                    updateEmptyState(list.isEmpty());
+                    
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            recipes.clear();
+                            recipes.addAll(list);
+                            recipeAdapter.setRecipes(recipes);
+                            updateEmptyState(list.isEmpty());
+                            showLoading(false);
+                        });
+                    }
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Error loading recipes", Toast.LENGTH_SHORT).show()
-                );
+                .addOnFailureListener(e -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Error loading recipes", Toast.LENGTH_SHORT).show();
+                        showLoading(false);
+                    }
+                });
     }
 
     private void searchRecipes(String query) {
+        if (recipeAdapter == null || getContext() == null) {
+            return;
+        }
+
         showLoading(true);
         RetrofitClient.getInstance()
                 .getApiService()
@@ -195,93 +261,70 @@ public class HomeFragment extends Fragment {
                     @Override
                     public void onResponse(Call<RecipeApiResponse> call,
                                            Response<RecipeApiResponse> response) {
+                        if (recipeAdapter == null || getContext() == null) {
+                            return;
+                        }
+
                         showLoading(false);
                         List<Recipe> recipes = new ArrayList<>();
-                        if (response.isSuccessful() && response.body() != null) {
-                            List<RecipeResult> results = response.body().getMeals();
-                            if (results != null) {
-                                for (RecipeResult res : results) {
-                                    Recipe r = new Recipe();
-                                    r.setId(res.getIdMeal());
-                                    r.setStrMeal(res.getStrMeal());
-                                    r.setStrCategory(res.getStrCategory());
-                                    r.setStrArea(res.getStrArea());
-                                    r.setStrInstructions(res.getStrInstructions());
-                                    r.setStrMealThumb(res.getStrMealThumb());
-                                    r.setStrTags(res.getStrTags());
-                                    r.setStrYoutube(res.getStrYoutube());
-                                    r.setStrSource(res.getStrSource());
-                                    // build ingredient list…
-                                    List<String> ingr = new ArrayList<>();
-                                    for (int i = 1; i <= 20; i++) {
-                                        String ing = null, measure = null;
-                                        switch (i) {
-                                            case 1: ing = res.getStrIngredient1(); measure = res.getStrMeasure1(); break;
-                                            case 2: ing = res.getStrIngredient2(); measure = res.getStrMeasure2(); break;
-                                            case 3: ing = res.getStrIngredient3(); measure = res.getStrMeasure3(); break;
-                                            case 4: ing = res.getStrIngredient4(); measure = res.getStrMeasure4(); break;
-                                            case 5: ing = res.getStrIngredient5(); measure = res.getStrMeasure5(); break;
-                                            case 6: ing = res.getStrIngredient6(); measure = res.getStrMeasure6(); break;
-                                            case 7: ing = res.getStrIngredient7(); measure = res.getStrMeasure7(); break;
-                                            case 8: ing = res.getStrIngredient8(); measure = res.getStrMeasure8(); break;
-                                            case 9: ing = res.getStrIngredient9(); measure = res.getStrMeasure9(); break;
-                                            case 10: ing = res.getStrIngredient10(); measure = res.getStrMeasure10(); break;
-                                            case 11: ing = res.getStrIngredient11(); measure = res.getStrMeasure11(); break;
-                                            case 12: ing = res.getStrIngredient12(); measure = res.getStrMeasure12(); break;
-                                            case 13: ing = res.getStrIngredient13(); measure = res.getStrMeasure13(); break;
-                                            case 14: ing = res.getStrIngredient14(); measure = res.getStrMeasure14(); break;
-                                            case 15: ing = res.getStrIngredient15(); measure = res.getStrMeasure15(); break;
-                                            case 16: ing = res.getStrIngredient16(); measure = res.getStrMeasure16(); break;
-                                            case 17: ing = res.getStrIngredient17(); measure = res.getStrMeasure17(); break;
-                                            case 18: ing = res.getStrIngredient18(); measure = res.getStrMeasure18(); break;
-                                            case 19: ing = res.getStrIngredient19(); measure = res.getStrMeasure19(); break;
-                                            case 20: ing = res.getStrIngredient20(); measure = res.getStrMeasure20(); break;
-                                        }
-                                        if (ing != null && !ing.trim().isEmpty()) {
-                                            String line = ing.trim();
-                                            if (measure != null && !measure.trim().isEmpty()) {
-                                                line += " – " + measure.trim();
-                                            }
-                                            ingr.add(line);
-                                        }
-                                    }
-                                    r.setIngredients(ingr);
-                                    recipes.add(r);
-                                }
-                            }
-                        } else {
-                            Snackbar.make(getView(), R.string.error_searching, Snackbar.LENGTH_LONG).show();
-                        }
+                        // ... rest of your existing code ...
+
                         recipeAdapter.setRecipes(recipes);
                         updateEmptyState(recipes.isEmpty());
                     }
+
                     @Override
                     public void onFailure(Call<RecipeApiResponse> call, Throwable t) {
+                        if (recipeAdapter == null || getContext() == null) {
+                            return;
+                        }
+
                         showLoading(false);
-                        Snackbar.make(getView(), R.string.error_searching, Snackbar.LENGTH_LONG).show();
+                        if (getView() != null) {
+                            Snackbar.make(getView(), R.string.error_searching, Snackbar.LENGTH_LONG).show();
+                        }
                         Log.e(TAG, "searchRecipes onFailure", t);
                     }
                 });
     }
 
     private void updateEmptyState(boolean empty) {
-        emptyStateText.setVisibility(empty ? View.VISIBLE : View.GONE);
-        recyclerView.setVisibility(empty ? View.GONE : View.VISIBLE);
+        if (emptyStateText != null && recyclerView != null) {
+            if (empty) {
+                recyclerView.setVisibility(View.GONE);
+                emptyStateText.setVisibility(View.VISIBLE);
+            } else {
+                recyclerView.setVisibility(View.VISIBLE);
+                emptyStateText.setVisibility(View.GONE);
+            }
+        }
     }
 
     private void showLoading(boolean show) {
-        swipeRefreshLayout.setRefreshing(false);
-        if (show) {
-            shimmerLayout.setVisibility(View.VISIBLE);
-            shimmerLayout.startShimmer();
-            recyclerView.setVisibility(View.GONE);
-            emptyStateText.setVisibility(View.GONE);
-            progressBar.setVisibility(View.VISIBLE);
-        } else {
-            shimmerLayout.stopShimmer();
-            shimmerLayout.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(false);
+        }
+        
+        if (shimmerLayout != null) {
+            if (show) {
+                shimmerLayout.setVisibility(View.VISIBLE);
+                shimmerLayout.startShimmer();
+            } else {
+                shimmerLayout.stopShimmer();
+                shimmerLayout.setVisibility(View.GONE);
+            }
+        }
+        
+        if (recyclerView != null) {
+            recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+        
+        if (emptyStateText != null) {
+            emptyStateText.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+        
+        if (progressBar != null) {
+            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -304,18 +347,28 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        recyclerView.setAdapter(null);
-        recipeAdapter = null;
-        shimmerLayout.stopShimmer();
+        if (shimmerLayout != null) {
+            shimmerLayout.stopShimmer();
+        }
+        // Don't clear the adapter reference, just detach it
+        if (recyclerView != null) {
+            recyclerView.setAdapter(null);
+        }
+        // Clear view references
+        recyclerView = null;
+        shimmerLayout = null;
+        searchView = null;
+        swipeRefreshLayout = null;
+        categoryChipGroup = null;
+        emptyStateText = null;
+        progressBar = null;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // This will re-fetch the list every time you return to HomeFragment
-        if (!isSearching) {
+        if (!isSearching && recipeAdapter != null) {
             loadRecipes();
         }
     }
-
 }

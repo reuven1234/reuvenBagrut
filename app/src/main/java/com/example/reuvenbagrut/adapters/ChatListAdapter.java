@@ -10,25 +10,27 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.reuvenbagrut.R;
-import com.example.reuvenbagrut.models.ChatMessage;
+import com.example.reuvenbagrut.models.ChatSummary;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatViewHolder> {
-    private Context context;
-    private List<ChatMessage> messages;
-    private OnChatClickListener listener;
+    private final Context context;
+    private final List<ChatSummary> chats;
+    private final OnChatClickListener listener;
+    private final SimpleDateFormat dateFormat;
 
     public interface OnChatClickListener {
-        void onChatClick(ChatMessage message);
+        void onChatClick(ChatSummary chat);
     }
 
-    public ChatListAdapter(Context context, List<ChatMessage> messages, OnChatClickListener listener) {
+    public ChatListAdapter(Context context, List<ChatSummary> chats, OnChatClickListener listener) {
         this.context = context;
-        this.messages = messages;
+        this.chats = chats;
         this.listener = listener;
+        this.dateFormat = new SimpleDateFormat("MMM d, HH:mm", Locale.getDefault());
     }
 
     @NonNull
@@ -40,47 +42,58 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
 
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-        ChatMessage message = messages.get(position);
-        holder.userName.setText(message.getSenderName());
-        holder.lastMessage.setText(message.getMessage());
-        holder.timeText.setText(formatTime(message.getTimestamp()));
-
-        if (message.getSenderImage() != null && !message.getSenderImage().isEmpty()) {
-            Glide.with(context)
-                .load(message.getSenderImage())
-                .circleCrop()
-                .into(holder.profileImage);
+        ChatSummary chat = chats.get(position);
+        
+        // Set chat name
+        holder.tvName.setText(chat.getOtherUserName() != null ? chat.getOtherUserName() : "Unknown User");
+        
+        // Set last message
+        holder.tvLastMessage.setText(chat.getLastMessage() != null ? chat.getLastMessage() : "No messages yet");
+        
+        // Set timestamp
+        if (chat.getLastMessageTime() != null) {
+            holder.tvTimestamp.setText(dateFormat.format(new Date(chat.getLastMessageTime())));
+        } else {
+            holder.tvTimestamp.setText("");
         }
-
+        
+        // Load profile image
+        if (chat.getOtherUserImage() != null && !chat.getOtherUserImage().isEmpty()) {
+            Glide.with(context)
+                .load(chat.getOtherUserImage())
+                .circleCrop()
+                .placeholder(R.drawable.ic_profile_placeholder)
+                .error(R.drawable.ic_profile_placeholder)
+                .into(holder.ivProfile);
+        } else {
+            holder.ivProfile.setImageResource(R.drawable.ic_profile_placeholder);
+        }
+        
+        // Set click listener
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onChatClick(message);
+                listener.onChatClick(chat);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return messages.size();
-    }
-
-    private String formatTime(long timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        return sdf.format(new Date(timestamp));
+        return chats.size();
     }
 
     static class ChatViewHolder extends RecyclerView.ViewHolder {
-        ImageView profileImage;
-        TextView userName;
-        TextView lastMessage;
-        TextView timeText;
-
-        ChatViewHolder(View itemView) {
+        ImageView ivProfile;
+        TextView tvName;
+        TextView tvLastMessage;
+        TextView tvTimestamp;
+        
+        ChatViewHolder(@NonNull View itemView) {
             super(itemView);
-            profileImage = itemView.findViewById(R.id.profileImage);
-            userName = itemView.findViewById(R.id.userName);
-            lastMessage = itemView.findViewById(R.id.lastMessage);
-            timeText = itemView.findViewById(R.id.timeText);
+            ivProfile = itemView.findViewById(R.id.ivProfile);
+            tvName = itemView.findViewById(R.id.tvName);
+            tvLastMessage = itemView.findViewById(R.id.tvLastMessage);
+            tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
         }
     }
 } 

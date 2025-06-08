@@ -2,32 +2,62 @@
 package com.example.reuvenbagrut.models;
 
 public class ChatSummary {
-    private String chatId;
-    private String name;
+    private String id;
     private String lastMessage;
-    private long   timestamp;
-    private String avatarUrl;
-
-    // Firestore requires a no-arg constructor
-    public ChatSummary() {}
-
-    public ChatSummary(String chatId, String name, String lastMessage, long timestamp, String avatarUrl) {
-        this.chatId      = chatId;
-        this.name        = name;
-        this.lastMessage = lastMessage;
-        this.timestamp   = timestamp;
-        this.avatarUrl   = avatarUrl;
+    private Long lastMessageTime;
+    private String otherUserId;
+    private String otherUserName;
+    private String otherUserImage;
+    
+    public ChatSummary() {
+        // Required empty constructor for Firestore
     }
-
-    public String getChatId()      { return chatId; }
-    public String getName()        { return name; }
-    public String getLastMessage() { return lastMessage; }
-    public long   getTimestamp()   { return timestamp; }
-    public String getAvatarUrl()   { return avatarUrl; }
-
-    public void setChatId(String chatId)         { this.chatId = chatId; }
-    public void setName(String name)             { this.name = name; }
-    public void setLastMessage(String msg)       { this.lastMessage = msg; }
-    public void setTimestamp(long timestamp)     { this.timestamp = timestamp; }
-    public void setAvatarUrl(String avatarUrl)   { this.avatarUrl = avatarUrl; }
+    
+    public String getId() {
+        return id;
+    }
+    
+    public void setId(String id) {
+        this.id = id;
+    }
+    
+    public String getLastMessage() {
+        return lastMessage;
+    }
+    
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+    
+    public Long getLastMessageTime() {
+        return lastMessageTime;
+    }
+    
+    public void setLastMessageTime(Long lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
+    }
+    
+    public String getOtherUserId() {
+        return otherUserId;
+    }
+    
+    public void setOtherUserId(String otherUserId) {
+        this.otherUserId = otherUserId;
+    }
+    
+    public String getOtherUserName() {
+        return otherUserName;
+    }
+    
+    public void setOtherUserName(String otherUserName) {
+        this.otherUserName = otherUserName;
+    }
+    
+    public String getOtherUserImage() {
+        return otherUserImage;
+    }
+    
+    public void setOtherUserImage(String otherUserImage) {
+        this.otherUserImage = otherUserImage;
+    }
 }

@@ -17,9 +17,12 @@ public class ChatMessage {
     private boolean seen;
     private boolean read;
     private List<String> attachments;
+    private String userId;
 
     // No-arg constructor
-    public ChatMessage() {}
+    public ChatMessage() {
+        // Required empty constructor for Firestore
+    }
 
     // Full constructor (add more as needed)
     public ChatMessage(String id, String senderId, String senderName, String senderImage, String message, long timestamp, boolean seen, boolean read) {
@@ -32,7 +35,6 @@ public class ChatMessage {
         this.seen = seen;
         this.read = read;
     }
-// Add this inside ChatMessage.java
 
     public ChatMessage(String id, String senderId, String message, long timestamp, boolean seen) {
         this.id = id;
@@ -72,22 +74,77 @@ public class ChatMessage {
     }
 
     // --- All getters/setters ---
-    public String getId() { return id; }
-    public String getSenderId() { return senderId; }
-    public String getSenderName() { return senderName; }
-    public String getSenderImage() { return senderImage; }
-    public String getMessage() { return message; }
-    public long getTimestamp() { return timestamp; }
-    public boolean isSeen() { return seen; }
-    public boolean isRead() { return read; }
-    public void setId(String id) { this.id = id; }
-    public void setSenderId(String senderId) { this.senderId = senderId; }
-    public void setSenderName(String senderName) { this.senderName = senderName; }
-    public void setSenderImage(String senderImage) { this.senderImage = senderImage; }
-    public void setMessage(String message) { this.message = message; }
-    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
-    public void setSeen(boolean seen) { this.seen = seen; }
-    public void setRead(boolean read) { this.read = read; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    public String getSenderImage() {
+        return senderImage;
+    }
+
+    public void setSenderImage(String senderImage) {
+        this.senderImage = senderImage;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public boolean isSeen() {
+        return seen;
+    }
+
+    public void setSeen(boolean seen) {
+        this.seen = seen;
+    }
+
+    public boolean isRead() {
+        return read;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
     // -- Your required methods --
     public String getFormattedTime() {

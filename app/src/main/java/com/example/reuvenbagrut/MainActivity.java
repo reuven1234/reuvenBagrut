@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.navigation_add_recipe) {
                     navController.navigate(R.id.navigation_add_recipe);
                 } else if (id == R.id.navigation_chat) {
-                    navController.navigate(R.id.navigation_chat);
+                    startActivity(new Intent(this, com.example.reuvenbagrut.activities.ChatListActivity.class));
                 } else if (id == R.id.navigation_profile) {
                     navController.navigate(R.id.navigation_profile);
                 } else if (id == R.id.navigation_settings) {

@@ -4,7 +4,9 @@ package com.example.reuvenbagrut.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
+import androidx.appcompat.widget.SearchView;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -33,6 +35,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
     private RecyclerView rvChats;
     private ChatListAdapter adapter;
     private List<ChatSummary> chats;
+    private List<ChatSummary> allChats;
     private ProgressBar progressBar;
     private TextView tvNoChats;
     private MaterialToolbar toolbar;
@@ -69,6 +72,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         
         // Setup RecyclerView
         chats = new ArrayList<>();
+        allChats = new ArrayList<>();
         adapter = new ChatListAdapter(this, chats, this);
         rvChats.setLayoutManager(new LinearLayoutManager(this));
         rvChats.setAdapter(adapter);
@@ -89,6 +93,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
               
               if (task.isSuccessful()) {
                   chats.clear();
+                  allChats.clear();
                   
                   for (QueryDocumentSnapshot document : task.getResult()) {
                       try {
@@ -122,6 +127,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
                           }
                           
                           chats.add(chat);
+                          allChats.add(chat);
                       } catch (Exception e) {
                           Log.e(TAG, "Error parsing chat: " + e.getMessage());
                       }
@@ -151,6 +157,42 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
     private void updateEmptyState() {
         tvNoChats.setVisibility(chats.isEmpty() ? View.VISIBLE : View.GONE);
         rvChats.setVisibility(chats.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_chat_list, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterChats(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterChats(newText);
+                return true;
+            }
+        });
+        return true;
+    }
+
+    private void filterChats(String query) {
+        if (query == null) query = "";
+        List<ChatSummary> filtered = new ArrayList<>();
+        for (ChatSummary chat : allChats) {
+            if (chat.getOtherUserName() != null &&
+                chat.getOtherUserName().toLowerCase().contains(query.toLowerCase())) {
+                filtered.add(chat);
+            }
+        }
+        chats.clear();
+        chats.addAll(filtered);
+        adapter.notifyDataSetChanged();
+        updateEmptyState();
     }
     
     @Override

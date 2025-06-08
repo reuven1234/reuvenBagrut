@@ -24,6 +24,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import com.example.reuvenbagrut.activities.RecipeDetailActivity;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +82,11 @@ public class LikedRecipesFragment extends Fragment {
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new RecipeAdapter(getContext(), new ArrayList<>(), null);
+        adapter = new RecipeAdapter(getContext(), new ArrayList<>(), recipe -> {
+            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
+            intent.putExtra("recipe", recipe);
+            startActivity(intent);
+        });
         recyclerView.setAdapter(adapter);
     }
 

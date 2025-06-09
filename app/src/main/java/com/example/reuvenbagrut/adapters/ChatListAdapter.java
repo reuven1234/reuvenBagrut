@@ -1,80 +1,49 @@
 package com.example.reuvenbagrut.adapters;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.example.reuvenbagrut.R;
-import com.example.reuvenbagrut.models.ChatSummary;
+import com.example.reuvenbagrut.models.Chat;
+import com.google.firebase.Timestamp;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatViewHolder> {
-    private final Context context;
-    private final List<ChatSummary> chats;
-    private final OnChatClickListener listener;
-    private final SimpleDateFormat dateFormat;
+    private List<Chat> chats;
+    private OnChatClickListener listener;
 
     public interface OnChatClickListener {
-        void onChatClick(ChatSummary chat);
+        void onChatClick(Chat chat);
     }
 
-    public ChatListAdapter(Context context, List<ChatSummary> chats, OnChatClickListener listener) {
-        this.context = context;
+    public ChatListAdapter(List<Chat> chats, OnChatClickListener listener) {
         this.chats = chats;
         this.listener = listener;
-        this.dateFormat = new SimpleDateFormat("MMM d, HH:mm", Locale.getDefault());
     }
 
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_chat, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_chat, parent, false);
         return new ChatViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-        ChatSummary chat = chats.get(position);
-        
-        // Set chat name
-        holder.tvName.setText(chat.getOtherUserName() != null ? chat.getOtherUserName() : "Unknown User");
-        
-        // Set last message
-        holder.tvLastMessage.setText(chat.getLastMessage() != null ? chat.getLastMessage() : "No messages yet");
-        
-        // Set timestamp
-        if (chat.getLastMessageTime() != null) {
-            holder.tvTimestamp.setText(dateFormat.format(new Date(chat.getLastMessageTime())));
-        } else {
-            holder.tvTimestamp.setText("");
-        }
-        
-        // Load profile image
-        if (chat.getOtherUserImage() != null && !chat.getOtherUserImage().isEmpty()) {
-            Glide.with(context)
-                .load(chat.getOtherUserImage())
-                .circleCrop()
-                .placeholder(R.drawable.ic_profile_placeholder)
-                .error(R.drawable.ic_profile_placeholder)
-                .into(holder.ivProfile);
-        } else {
-            holder.ivProfile.setImageResource(R.drawable.ic_profile_placeholder);
-        }
-        
-        // Set click listener
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onChatClick(chat);
-            }
-        });
+        Chat chat = chats.get(position);
+        holder.bind(chat);
     }
 
     @Override
@@ -82,18 +51,57 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
         return chats.size();
     }
 
-    static class ChatViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivProfile;
-        TextView tvName;
-        TextView tvLastMessage;
-        TextView tvTimestamp;
-        
+    public void updateChats(List<Chat> newChats) {
+        this.chats = newChats;
+        notifyDataSetChanged();
+    }
+
+    class ChatViewHolder extends RecyclerView.ViewHolder {
+        private ImageView profileImage;
+        private TextView nameText;
+        private TextView lastMessageText;
+        private TextView timeText;
+        private View unreadIndicator;
+
         ChatViewHolder(@NonNull View itemView) {
             super(itemView);
-            ivProfile = itemView.findViewById(R.id.ivProfile);
-            tvName = itemView.findViewById(R.id.tvName);
-            tvLastMessage = itemView.findViewById(R.id.tvLastMessage);
-            tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
+            profileImage = itemView.findViewById(R.id.profileImage);
+            nameText = itemView.findViewById(R.id.nameText);
+            lastMessageText = itemView.findViewById(R.id.lastMessageText);
+            timeText = itemView.findViewById(R.id.timeText);
+            unreadIndicator = itemView.findViewById(R.id.unreadIndicator);
+
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onChatClick(chats.get(position));
+                }
+            });
+        }
+
+        void bind(Chat chat) {
+            nameText.setText(chat.getOtherUserName());
+            lastMessageText.setText(chat.getLastMessage());
+            
+            // Format timestamp
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            String time = sdf.format(new Date(chat.getLastMessageTime()));
+            timeText.setText(time);
+
+            // Load profile image
+            if (chat.getOtherUserImage() != null && !chat.getOtherUserImage().isEmpty()) {
+                Glide.with(profileImage.getContext())
+                        .load(chat.getOtherUserImage())
+                        .circleCrop()
+                        .placeholder(R.drawable.default_profile)
+                        .error(R.drawable.default_profile)
+                        .into(profileImage);
+            } else {
+                profileImage.setImageResource(R.drawable.default_profile);
+            }
+
+            // Show/hide unread indicator
+            unreadIndicator.setVisibility(chat.isRead() ? View.GONE : View.VISIBLE);
         }
     }
 } 

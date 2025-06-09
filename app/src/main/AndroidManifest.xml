@@ -36,6 +36,7 @@
         <activity
             android:name=".FirestoreIngredientsMigrationActivity"
             android:exported="false" /> <!-- Google Play Services -->
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" /> <!-- Firebase -->
@@ -54,6 +55,11 @@
             android:name=".SignUp"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".activities.ChatListActivity"
+            android:exported="false"
+            android:label="@string/title_chat_list"
+            android:theme="@style/Theme.FoodPal.NoActionBar"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

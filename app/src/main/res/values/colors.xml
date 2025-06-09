@@ -63,4 +63,10 @@
     <color name="textPrimary">#212121</color>
     <color name="textSecondary">#616161</color>
 
+    <color name="colorPrimary">#2196F3</color>
+    <color name="colorPrimaryDark">#1976D2</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="gray">#757575</color>
+    <color name="lightGray">#F5F5F5</color>
+
 </resources>

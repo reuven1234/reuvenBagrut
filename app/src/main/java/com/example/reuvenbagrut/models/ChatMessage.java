@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class ChatMessage {
-    private String id;
+    private String messageId;
     private String senderId;
     private String senderName;
     private String senderImage;
@@ -26,7 +26,7 @@ public class ChatMessage {
 
     // Full constructor (add more as needed)
     public ChatMessage(String id, String senderId, String senderName, String senderImage, String message, long timestamp, boolean seen, boolean read) {
-        this.id = id;
+        this.messageId = id;
         this.senderId = senderId;
         this.senderName = senderName;
         this.senderImage = senderImage;
@@ -37,7 +37,7 @@ public class ChatMessage {
     }
 
     public ChatMessage(String id, String senderId, String message, long timestamp, boolean seen) {
-        this.id = id;
+        this.messageId = id;
         this.senderId = senderId;
         this.message = message;
         this.timestamp = timestamp;
@@ -74,12 +74,12 @@ public class ChatMessage {
     }
 
     // --- All getters/setters ---
-    public String getId() {
-        return id;
+    public String getMessageId() {
+        return messageId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 
     public String getSenderId() {

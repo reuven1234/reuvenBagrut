@@ -6,19 +6,14 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.PropertyName;
 
 public class Chat {
-    private String id;
-    @PropertyName("participants")
+    private String chatId;
     private List<String> participants;
-    @PropertyName("lastMessage")
     private String lastMessage;
-    @PropertyName("lastMessageTime")
     private long lastMessageTime;
-    @PropertyName("lastMessageSenderId")
-    private String lastMessageSenderId;
-    @PropertyName("lastMessageSenderName")
-    private String lastMessageSenderName;
-    @PropertyName("lastMessageSenderImage")
-    private String lastMessageSenderImage;
+    private String otherUserId;
+    private String otherUserName;
+    private String otherUserImage;
+    private boolean isRead;
 
     public Chat() {
         // Required empty constructor for Firestore
@@ -30,45 +25,76 @@ public class Chat {
     }
 
     // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getChatId() {
+        return chatId;
+    }
 
-    @PropertyName("participants")
-    public List<String> getParticipants() { return participants; }
-    @PropertyName("participants")
-    public void setParticipants(List<String> participants) { this.participants = participants; }
+    public void setChatId(String chatId) {
+        this.chatId = chatId;
+    }
 
-    @PropertyName("lastMessage")
-    public String getLastMessage() { return lastMessage; }
-    @PropertyName("lastMessage")
-    public void setLastMessage(String lastMessage) { this.lastMessage = lastMessage; }
+    public List<String> getParticipants() {
+        return participants;
+    }
 
-    @PropertyName("lastMessageTime")
-    public long getLastMessageTime() { return lastMessageTime; }
-    @PropertyName("lastMessageTime")
-    public void setLastMessageTime(long lastMessageTime) { this.lastMessageTime = lastMessageTime; }
+    public void setParticipants(List<String> participants) {
+        this.participants = participants;
+    }
 
-    @PropertyName("lastMessageSenderId")
-    public String getLastMessageSenderId() { return lastMessageSenderId; }
-    @PropertyName("lastMessageSenderId")
-    public void setLastMessageSenderId(String lastMessageSenderId) { this.lastMessageSenderId = lastMessageSenderId; }
+    public String getLastMessage() {
+        return lastMessage;
+    }
 
-    @PropertyName("lastMessageSenderName")
-    public String getLastMessageSenderName() { return lastMessageSenderName; }
-    @PropertyName("lastMessageSenderName")
-    public void setLastMessageSenderName(String lastMessageSenderName) { this.lastMessageSenderName = lastMessageSenderName; }
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
 
-    @PropertyName("lastMessageSenderImage")
-    public String getLastMessageSenderImage() { return lastMessageSenderImage; }
-    @PropertyName("lastMessageSenderImage")
-    public void setLastMessageSenderImage(String lastMessageSenderImage) { this.lastMessageSenderImage = lastMessageSenderImage; }
+    public long getLastMessageTime() {
+        return lastMessageTime;
+    }
+
+    public void setLastMessageTime(long lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
+    }
+
+    public String getOtherUserId() {
+        return otherUserId;
+    }
+
+    public void setOtherUserId(String otherUserId) {
+        this.otherUserId = otherUserId;
+    }
+
+    public String getOtherUserName() {
+        return otherUserName;
+    }
+
+    public void setOtherUserName(String otherUserName) {
+        this.otherUserName = otherUserName;
+    }
+
+    public String getOtherUserImage() {
+        return otherUserImage;
+    }
+
+    public void setOtherUserImage(String otherUserImage) {
+        this.otherUserImage = otherUserImage;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
+    }
 
     public void updateLastMessage(ChatMessage message) {
         this.lastMessage = message.getMessage();
         this.lastMessageTime = message.getTimestamp();
-        this.lastMessageSenderId = message.getSenderId();
-        this.lastMessageSenderName = message.getSenderName();
-        this.lastMessageSenderImage = message.getSenderImage();
+        this.otherUserId = message.getSenderId();
+        this.otherUserName = message.getSenderName();
+        this.otherUserImage = message.getSenderImage();
     }
 
     public String getOtherParticipantId(String currentUserId) {

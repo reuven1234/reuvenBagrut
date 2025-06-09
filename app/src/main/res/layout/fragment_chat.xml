@@ -4,79 +4,71 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- הודעה כשאין הודעות -->
+    <TextView
+        android:id="@+id/tvNoMessages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_messages"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/messageBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- רשימת הודעות -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMessages"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        android:padding="4dp"
+        android:paddingBottom="56dp"
         android:clipToPadding="false"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@id/messageInputLayout"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/messageBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/messageInputLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="4dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp">
-
-            <EditText
-                android:id="@+id/etMessage"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:background="@null"
-                android:hint="Type a message..."
-                android:inputType="textMultiLine"
-                android:maxLines="4"
-                android:padding="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/btnSend"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageButton
-                android:id="@+id/btnSend"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Send message"
-                android:src="@drawable/ic_send"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/primaryBlue" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
+    <!-- ProgressBar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/tvNoMessages"
-        android:layout_width="wrap_content"
+    <!-- שורת קלט -->
+    <LinearLayout
+        android:id="@+id/messageBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No messages yet"
-        android:textSize="16sp"
-        android:visibility="gone"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:background="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-</androidx.constraintlayout.widget.ConstraintLayout> 
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/type_message"
+            android:minLines="1"
+            android:maxLines="4" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSend"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="64dp"
+            android:text="@string/send" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

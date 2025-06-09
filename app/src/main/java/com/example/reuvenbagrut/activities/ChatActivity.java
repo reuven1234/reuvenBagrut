@@ -3,7 +3,7 @@ package com.example.reuvenbagrut.activities;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.reuvenbagrut.ChatFragment;
+import com.example.reuvenbagrut.fragments.ChatFragment;
 import com.example.reuvenbagrut.R;
 
 public class ChatActivity extends AppCompatActivity {
@@ -28,7 +28,7 @@ public class ChatActivity extends AppCompatActivity {
 
         // Add ChatFragment
         if (savedInstanceState == null) {
-            ChatFragment fragment = ChatFragment.newInstance(chatId, otherUserId);
+            ChatFragment fragment = ChatFragment.newInstance(chatId, otherUserId, otherUserName);
             getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)

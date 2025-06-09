@@ -1,215 +1,95 @@
-// File: app/src/main/java/com/example/reuvenbagrut/activities/ChatListActivity.java
 package com.example.reuvenbagrut.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import androidx.appcompat.widget.SearchView;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.reuvenbagrut.R;
-import com.example.reuvenbagrut.adapters.ChatListAdapter;
-import com.example.reuvenbagrut.models.ChatSummary;
-import com.google.android.material.appbar.MaterialToolbar;
+import com.example.reuvenbagrut.adapters.ChatMessageAdapter;
+import com.example.reuvenbagrut.models.ChatPreview;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatListActivity extends AppCompatActivity implements ChatListAdapter.OnChatClickListener {
-    private static final String TAG = "ChatListActivity";
-    
-    private RecyclerView rvChats;
-    private ChatListAdapter adapter;
-    private List<ChatSummary> chats;
-    private List<ChatSummary> allChats;
-    private ProgressBar progressBar;
-    private TextView tvNoChats;
-    private MaterialToolbar toolbar;
+/** Activity המציגה את כל הצ’אטים של המשתמש המחובר. */
+public class ChatListActivity extends AppCompatActivity {
+
+    private RecyclerView       rvChats;
+    private ProgressBar        progress;
+    private TextView           tvEmpty;
+    private ChatMessageAdapter adapter;
+    private final List<ChatPreview> chats = new ArrayList<>();
+
     private FirebaseFirestore db;
-    private FirebaseAuth auth;
-    private String currentUserId;
+    private String            currentUid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_list);
-        
-        // Initialize Firebase
-        db = FirebaseFirestore.getInstance();
-        auth = FirebaseAuth.getInstance();
-        currentUserId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        
-        if (currentUserId == null) {
-            Toast.makeText(this, "Please sign in to view chats", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-        
-        // Initialize views
-        rvChats = findViewById(R.id.rvChats);
-        progressBar = findViewById(R.id.progressBar);
-        tvNoChats = findViewById(R.id.tvNoChats);
-        toolbar = findViewById(R.id.toolbar);
-        
-        // Setup toolbar
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("Messages");
-        
-        // Setup RecyclerView
-        chats = new ArrayList<>();
-        allChats = new ArrayList<>();
-        adapter = new ChatListAdapter(this, chats, this);
+
+        rvChats  = findViewById(R.id.rvChats);
+        progress = findViewById(R.id.progressBar);
+        tvEmpty  = findViewById(R.id.tvEmpty);
+
+        adapter = new ChatMessageAdapter(
+                chats,
+                chat -> {
+                    Intent i = new Intent(ChatListActivity.this, ChatActivity.class);
+                    i.putExtra("otherUid",  chat.getOtherUid());
+                    i.putExtra("otherName", chat.getOtherName());
+                    startActivity(i);
+                }
+        );
+
         rvChats.setLayoutManager(new LinearLayoutManager(this));
         rvChats.setAdapter(adapter);
-        
-        // Load chats
+
+        db         = FirebaseFirestore.getInstance();
+        currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
         loadChats();
     }
-    
+
     private void loadChats() {
-        showLoading(true);
-        
+        progress.setVisibility(View.VISIBLE);
+
         db.collection("chats")
-          .whereArrayContains("participants", currentUserId)
-          .orderBy("lastMessageTime", Query.Direction.DESCENDING)
-          .get()
-          .addOnCompleteListener(task -> {
-              showLoading(false);
-              
-              if (task.isSuccessful()) {
-                  chats.clear();
-                  allChats.clear();
+                .whereArrayContains("participants", currentUid)
+                .orderBy("lastMessageTime", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(snap -> {
+                    chats.clear();
+                    for (DocumentSnapshot d : snap.getDocuments()) {
+                        String otherUid = null;
+                        List<String> parts = (List<String>) d.get("participants");
+                        if (parts != null)
+                            for (String p : parts) if (!p.equals(currentUid)) otherUid = p;
+                        if (otherUid == null) continue;
 
-                  for (QueryDocumentSnapshot document : task.getResult()) {
-                      try {
-                          ChatSummary chat = new ChatSummary();
-                          chat.setId(document.getId());
-                          chat.setLastMessage(document.getString("lastMessage"));
-                          chat.setLastMessageTime(document.getLong("lastMessageTime"));
-                          
-                          // Get other participant's ID
-                          List<String> participants = (List<String>) document.get("participants");
-                          if (participants != null) {
-                              for (String participantId : participants) {
-                                  if (!participantId.equals(currentUserId)) {
-                                      chat.setOtherUserId(participantId);
-                                      break;
-                                  }
-                              }
-                          }
-                          
-                          // Get other participant's name
-                          if (chat.getOtherUserId() != null) {
-                              db.collection("users").document(chat.getOtherUserId())
-                                .get()
-                                .addOnSuccessListener(userDoc -> {
-                                    if (userDoc.exists()) {
-                                        chat.setOtherUserName(userDoc.getString("name"));
-                                        chat.setOtherUserImage(userDoc.getString("profileImage"));
-                                        adapter.notifyDataSetChanged();
-                                    }
-                                });
-                          }
-                          
-                          chats.add(chat);
-                          allChats.add(chat);
-                      } catch (Exception e) {
-                          Log.e(TAG, "Error parsing chat: " + e.getMessage());
-                      }
-                  }
-                  
-                  adapter.notifyDataSetChanged();
-                  updateEmptyState();
-              } else {
-                  showError("Error loading chats");
-              }
-          })
-          .addOnFailureListener(e -> {
-              showLoading(false);
-              showError("Error loading chats");
-          });
-    }
-    
-    private void showLoading(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        rvChats.setVisibility(show ? View.GONE : View.VISIBLE);
-    }
-    
-    private void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
-    
-    private void updateEmptyState() {
-        tvNoChats.setVisibility(chats.isEmpty() ? View.VISIBLE : View.GONE);
-        rvChats.setVisibility(chats.isEmpty() ? View.GONE : View.VISIBLE);
-    }
+                        ChatPreview cp = new ChatPreview();
+                        cp.setOtherUid(otherUid);
+                        cp.setOtherName(d.getString("otherName"));
+                        cp.setLastMessage(d.getString("lastMessage"));
+                        Long ts = d.getLong("lastMessageTime");
+                        cp.setLastMessageTime(ts != null ? ts : 0L);
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_chat_list, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                filterChats(query);
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                filterChats(newText);
-                return true;
-            }
-        });
-        return true;
-    }
-
-    private void filterChats(String query) {
-        if (query == null) query = "";
-        List<ChatSummary> filtered = new ArrayList<>();
-        for (ChatSummary chat : allChats) {
-            if (chat.getOtherUserName() != null &&
-                    chat.getOtherUserName().toLowerCase().contains(query.toLowerCase())) {
-                filtered.add(chat);
-            }
-        }
-        chats.clear();
-        chats.addAll(filtered);
-        adapter.notifyDataSetChanged();
-        updateEmptyState();
-    }
-    
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    
-    @Override
-    public void onChatClick(ChatSummary chat) {
-        Intent intent = new Intent(this, ChatActivity.class);
-        intent.putExtra("chatId", chat.getId());
-        intent.putExtra("otherUserId", chat.getOtherUserId());
-        intent.putExtra("otherUserName", chat.getOtherUserName());
-        startActivity(intent);
+                        chats.add(cp);
+                    }
+                    adapter.notifyDataSetChanged();
+                    progress.setVisibility(View.GONE);
+                    tvEmpty.setVisibility(chats.isEmpty() ? View.VISIBLE : View.GONE);
+                })
+                .addOnFailureListener(e -> progress.setVisibility(View.GONE));
     }
 }

@@ -200,8 +200,12 @@
     <string name="new_chat">New Chat</string>
     <string name="no_chats">No chats yet</string>
     <string name="user_image">User Image</string>
+    <!-- Chat list title -->
+    <string name="title_chat_list">Chats</string>
+    <string name="cannot_chat_with_self">You can’t chat with yourself</string>
 
-
+    <!-- Toast when chat open fails -->
+    <string name="error_open_chat">Could not open chat. Please try again.</string>
     <string name="read_receipt">Read</string>
 
 </resources>

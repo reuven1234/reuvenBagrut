@@ -1,6 +1,10 @@
 package com.example.reuvenbagrut.adapters;
 
 import android.content.Context;
+// import android.graphics.Bitmap;
+// import android.graphics.BitmapFactory;
+// import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +35,7 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     @NonNull
     @Override
     public RecipeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_recipe_grid, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_recipe, parent, false);
         return new RecipeViewHolder(view);
     }
 
@@ -54,13 +58,13 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     class RecipeViewHolder extends RecyclerView.ViewHolder {
         private final ShapeableImageView recipeImage;
         private final MaterialTextView recipeName;
-        private final MaterialTextView recipeCategory;
+        // private final MaterialTextView recipeCategory;
 
         public RecipeViewHolder(@NonNull View itemView) {
             super(itemView);
             recipeImage = itemView.findViewById(R.id.recipeImage);
             recipeName = itemView.findViewById(R.id.recipeName);
-            recipeCategory = itemView.findViewById(R.id.recipeCategory);
+            // recipeCategory = itemView.findViewById(R.id.recipeCategory);
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -77,12 +81,9 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
             String mealName = recipe.getStrMeal();
             recipeName.setText(mealName != null ? mealName : "Unknown Recipe");
 
-            // Set category with null check
-            String category = recipe.getStrCategory();
-            recipeCategory.setText(category != null ? category : "Unknown Category");
-
             // Load image with null check
             String imageUrl = recipe.getStrMealThumb();
+            Log.d("RecipeAdapter", "Loading image for recipe " + recipe.getStrMeal() + ": " + (imageUrl != null ? imageUrl.substring(0, Math.min(imageUrl.length(), 50)) + "..." : "null"));
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
                 Glide.with(context)
                         .load(imageUrl)

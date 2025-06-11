@@ -2,9 +2,6 @@ package com.example.reuvenbagrut.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,12 +18,10 @@ import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Activity המציגה את כל הצ’אטים של המשתמש המחובר. */
+/** מסך רשימת-הצ’אטים שה-MainActivity מפעיל. */
 public class ChatListActivity extends AppCompatActivity {
 
     private RecyclerView       rvChats;
-    private ProgressBar        progress;
-    private TextView           tvEmpty;
     private ChatMessageAdapter adapter;
     private final List<ChatPreview> chats = new ArrayList<>();
 
@@ -39,18 +34,13 @@ public class ChatListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat_list);
 
         rvChats  = findViewById(R.id.rvChats);
-        progress = findViewById(R.id.progressBar);
-        tvEmpty  = findViewById(R.id.tvEmpty);
-
         adapter = new ChatMessageAdapter(
                 chats,
-                chat -> {
-                    Intent i = new Intent(ChatListActivity.this, ChatActivity.class);
-                    i.putExtra("otherUid",  chat.getOtherUid());
-                    i.putExtra("otherName", chat.getOtherName());
-                    startActivity(i);
-                }
-        );
+                chat -> startActivity(new Intent(this, ChatActivity.class)
+                        /* ↓ ↓ ↓  שולחים ישירות את chatId שהאדפטר מחזיק */
+                        .putExtra("chatId",        chat.getDocumentId())
+                        .putExtra("otherUserId",   chat.getOtherUid())
+                        .putExtra("otherUserName", chat.getOtherName())));
 
         rvChats.setLayoutManager(new LinearLayoutManager(this));
         rvChats.setAdapter(adapter);
@@ -62,8 +52,6 @@ public class ChatListActivity extends AppCompatActivity {
     }
 
     private void loadChats() {
-        progress.setVisibility(View.VISIBLE);
-
         db.collection("chats")
                 .whereArrayContains("participants", currentUid)
                 .orderBy("lastMessageTime", Query.Direction.DESCENDING)
@@ -71,25 +59,23 @@ public class ChatListActivity extends AppCompatActivity {
                 .addOnSuccessListener(snap -> {
                     chats.clear();
                     for (DocumentSnapshot d : snap.getDocuments()) {
-                        String otherUid = null;
                         List<String> parts = (List<String>) d.get("participants");
-                        if (parts != null)
-                            for (String p : parts) if (!p.equals(currentUid)) otherUid = p;
-                        if (otherUid == null) continue;
+                        if (parts == null) continue;
+                        String other = parts.get(0).equals(currentUid) ? parts.get(1) : parts.get(0);
 
-                        ChatPreview cp = new ChatPreview();
-                        cp.setOtherUid(otherUid);
-                        cp.setOtherName(d.getString("otherName"));
-                        cp.setLastMessage(d.getString("lastMessage"));
-                        Long ts = d.getLong("lastMessageTime");
-                        cp.setLastMessageTime(ts != null ? ts : 0L);
-
-                        chats.add(cp);
+                        /* -------- צור ChatPreview עם 4 פרמטרים -------- */
+                        ChatPreview p = new ChatPreview(
+                                other,                                 // otherUid
+                                d.getString("otherName"),              // otherName
+                                d.getString("lastMessage"),            // lastMessage
+                                d.getLong("lastMessageTime") != null   // lastMessageTime
+                                        ? d.getLong("lastMessageTime") : 0L
+                        );
+                        /* נשמור גם את ה-document id כדי להשתמש בו בה Intent */
+                        p.setDocumentId(d.getId());                   // ← צריך setter (ראה למטה)
+                        chats.add(p);
                     }
                     adapter.notifyDataSetChanged();
-                    progress.setVisibility(View.GONE);
-                    tvEmpty.setVisibility(chats.isEmpty() ? View.VISIBLE : View.GONE);
-                })
-                .addOnFailureListener(e -> progress.setVisibility(View.GONE));
+                });
     }
 }

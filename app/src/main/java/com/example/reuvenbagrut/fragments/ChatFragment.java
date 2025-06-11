@@ -25,10 +25,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChatFragment extends Fragment {
 
@@ -62,6 +65,7 @@ public class ChatFragment extends Fragment {
     // Firebase
     private FirebaseFirestore db;
     private FirebaseAuth      auth;
+    private ListenerRegistration chatMessagesListener; // New: ListenerRegistration for Firestore
 
     private String currentUid;
     private String chatId;
@@ -90,10 +94,15 @@ public class ChatFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_chat, container, false);
-
+        Log.d("ChatDebug", "inflated layout id = " + v.getId());
         rvMessages  = v.findViewById(R.id.rvMessages);
         etMessage   = v.findViewById(R.id.etMessage);
         btnSend     = v.findViewById(R.id.btnSend);
+        Log.d("ChatDebug", "btnSend = " + btnSend);
+        btnSend.setOnClickListener(view -> {
+            Log.d("ChatDebug", "CLICK");
+            sendMessage();
+        });
         progressBar = v.findViewById(R.id.progressBar);
         tvNoMessages = v.findViewById(R.id.tvNoMessages);
 
@@ -103,10 +112,6 @@ public class ChatFragment extends Fragment {
         ((LinearLayoutManager) rvMessages.getLayoutManager())
                 .setStackFromEnd(true);
 
-
-
-        btnSend.setOnClickListener(view -> sendMessage());
-
         listenForMessages();
         return v;
     }
@@ -114,7 +119,7 @@ public class ChatFragment extends Fragment {
     private void listenForMessages() {
         showLoading(true);
 
-        db.collection("chats")
+        chatMessagesListener = db.collection("chats") // Assign to listenerRegistration
                 .document(chatId)
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -161,22 +166,29 @@ public class ChatFragment extends Fragment {
         ChatMessage m = new ChatMessage();
         m.setMessage(text);
         m.setSenderId(currentUid);
-        m.setTimestamp(new Date().getTime());
+        long currentTimestamp = new Date().getTime(); // Get current time once
+        m.setTimestamp(currentTimestamp);
+
+        Log.d(TAG, "Sending message with timestamp: " + currentTimestamp); // New log
 
         db.collection("chats")
                 .document(chatId)
                 .collection("messages")
                 .add(m)
+                .addOnSuccessListener(documentReference -> {
+                    // Update the parent chat document with the last message and time
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("lastMessage", m.getMessage());
+                    updates.put("lastMessageTime", m.getTimestamp());
+                    Log.d(TAG, "Updating chat document with last message time: " + m.getTimestamp()); // New log
+                    db.collection("chats").document(chatId).update(updates)
+                            .addOnSuccessListener(aVoid -> Log.d(TAG, "Chat document updated with last message."))
+                            .addOnFailureListener(e -> Log.e(TAG, "Error updating last message in chat document", e));
+                })
                 .addOnFailureListener(e -> {
                     showError("Send failed: " + e.getMessage());
                     Log.e(TAG, "sendMessage: ", e);
                 });
-
-        if (text.isEmpty()) {
-            Log.d(TAG, "sendMessage: empty – not sending");
-            return;
-        }
-
     }
 
     // helpers
@@ -191,5 +203,13 @@ public class ChatFragment extends Fragment {
         boolean empty = messages.isEmpty();
         tvNoMessages.setVisibility(empty ? View.VISIBLE : View.GONE);
         rvMessages.setVisibility(empty ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (chatMessagesListener != null) {
+            chatMessagesListener.remove(); // Stop listening for updates
+        }
     }
 }

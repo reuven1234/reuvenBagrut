@@ -3,6 +3,7 @@ package com.example.reuvenbagrut;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -21,17 +22,16 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import android.util.Base64;
 import android.util.Log;
-import com.google.firebase.storage.StorageException;
-import com.google.firebase.storage.UploadTask;
 import com.example.reuvenbagrut.models.Recipe;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -62,7 +62,6 @@ public class AddRecipeFragment extends Fragment {
     
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
-    private StorageReference storageRef;
 
     public AddRecipeFragment() {
         // Required empty public constructor
@@ -77,7 +76,6 @@ public class AddRecipeFragment extends Fragment {
     private void initializeFirebase() {
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        storageRef = FirebaseStorage.getInstance().getReference();
     }
 
     @Override
@@ -197,166 +195,95 @@ public class AddRecipeFragment extends Fragment {
             recipeNameInput.requestFocus();
             return;
         }
-        
+
         // Get ingredients
-        String ingredientsText = ingredientsInput.getText().toString().trim();
-        if (TextUtils.isEmpty(ingredientsText)) {
+        String ingredientsString = ingredientsInput.getText().toString().trim();
+        if (TextUtils.isEmpty(ingredientsString)) {
             ingredientsInput.setError(getString(R.string.error_fill_all_fields));
             ingredientsInput.requestFocus();
             return;
         }
-        
-        // Parse ingredients to a list
-        List<String> ingredients = new ArrayList<>();
-        for (String line : ingredientsText.split("\n")) {
-            if (!TextUtils.isEmpty(line.trim())) {
-                ingredients.add(line.trim());
-            }
-        }
-        
+
+        // Split ingredients string into a list and set on recipe object
+        List<String> ingredientsList = new ArrayList<>(Arrays.asList(ingredientsString.split("\n")));
+        // Remove empty lines from the ingredients list
+        ingredientsList.removeIf(String::isEmpty);
+
         // Get instructions
-        String instructionsText = instructionsInput.getText().toString().trim();
-        if (TextUtils.isEmpty(instructionsText)) {
+        String instructions = instructionsInput.getText().toString().trim();
+        if (TextUtils.isEmpty(instructions)) {
             instructionsInput.setError(getString(R.string.error_fill_all_fields));
             instructionsInput.requestFocus();
             return;
         }
-        
-        // Parse instructions to a list
-        List<String> steps = new ArrayList<>();
-        for (String step : instructionsText.split("(\\n+|\\. )")) {
-            if (!TextUtils.isEmpty(step.trim())) {
-                steps.add(step.trim());
-            }
-        }
 
-        showLoading(true);
-        
-        // Create recipe object
-        Recipe recipe = new Recipe();
-        recipe.setStrMeal(recipeName);
-        recipe.setStrCategory("Other"); // Default category
-        recipe.setStrInstructions(instructionsText);
-        recipe.setUserId(currentUser.getUid());
-        recipe.setIngredients(ingredients);
-        recipe.setSteps(steps);
-        recipe.setTimestamp(System.currentTimeMillis());
-        
-        // Set author info
-        recipe.setStrAuthor(currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Anonymous");
-        if (currentUser.getPhotoUrl() != null) {
-            recipe.setStrAuthorImage(currentUser.getPhotoUrl().toString());
-        }
-
-        if (isImageChanged && selectedImageBitmap != null) {
-            uploadImageAndSaveRecipe(recipe);
-        } else {
-            saveRecipe(recipe);
-        }
-    }
-
-    private void uploadImageAndSaveRecipe(final Recipe recipe) {
-        if (!isAdded()) return;
-
-        // Verify authentication
-        if (currentUser == null || currentUser.getUid() == null) {
-            Log.e(TAG, "User is not authenticated");
-            handleError(new Exception("User not authenticated"), R.string.error_not_authenticated);
+        if (selectedImageBitmap == null) {
+            Snackbar.make(requireView(), R.string.error_image_required, Snackbar.LENGTH_SHORT).show();
             return;
         }
 
-        try {
-            // Create file name with user ID for better organization
-            String userId = currentUser.getUid();
-            String timestamp = String.valueOf(System.currentTimeMillis());
-            String imageFileName = String.format("users/%s/recipes/%s.jpg", userId, timestamp);
-            Log.d(TAG, "Attempting to upload image: " + imageFileName);
+        showLoading(true);
 
-            // Get storage reference
-            StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageFileName);
-
-            // Prepare image data
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            selectedImageBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, baos);
-            byte[] imageData = baos.toByteArray();
-            Log.d(TAG, "Image size: " + imageData.length + " bytes");
-
-            // Show upload progress
-            showLoading(true);
-
-            // Start upload
-            UploadTask uploadTask = imageRef.putBytes(imageData);
-
-            uploadTask
-                .addOnProgressListener(taskSnapshot -> {
-                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                    Log.d(TAG, "Upload progress: " + progress + "%");
-                    if (progressBar != null) {
-                        progressBar.setProgress((int) progress);
-                    }
-                })
-                .addOnSuccessListener(taskSnapshot -> {
-                    Log.d(TAG, "Upload successful, getting download URL");
-                    imageRef.getDownloadUrl()
-                        .addOnSuccessListener(uri -> {
-                            Log.d(TAG, "Got download URL: " + uri.toString());
-                            recipe.setStrMealThumb(uri.toString());
-                            saveRecipe(recipe);
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Failed to get download URL", e);
-                            handleError(e, R.string.error_getting_image_url);
-                        });
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Upload failed", e);
-                    if (e instanceof StorageException) {
-                        StorageException se = (StorageException) e;
-                        Log.e(TAG, "Storage error code: " + se.getErrorCode() + 
-                                  ", HTTP code: " + se.getHttpResultCode());
-                    }
-                    handleError(e, R.string.error_uploading_image);
-                });
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error preparing upload", e);
-            handleError(e, R.string.error_uploading_image);
+        // Convert bitmap to Base64 string
+        String imageBase64 = null;
+        if (selectedImageBitmap != null) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            selectedImageBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            imageBase64 = "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.DEFAULT);
+            Log.d(TAG, "Generated Base64 image string: " + imageBase64.substring(0, Math.min(imageBase64.length(), 100)) + "..."); // Log first 100 chars
         }
+
+        saveRecipe(recipeName, ingredientsString, instructions, imageBase64);
     }
 
-    private void saveRecipe(Recipe recipe) {
-        if (!isAdded()) return;
+    private void saveRecipe(String recipeName, String ingredientsString, String instructions, String imageBase64) {
+        String userId = currentUser.getUid();
+        String userName = currentUser.getDisplayName(); // Assuming display name is set on user
 
-        Map<String, Object> recipeMap = new HashMap<>();
-        recipeMap.put("strMeal", recipe.getStrMeal());
-        recipeMap.put("strCategory", recipe.getStrCategory());
-        recipeMap.put("strInstructions", recipe.getStrInstructions());
-        recipeMap.put("strMealThumb", recipe.getStrMealThumb());
-        recipeMap.put("strAuthor", recipe.getStrAuthor());
-        recipeMap.put("strAuthorImage", recipe.getStrAuthorImage());
-        recipeMap.put("userId", recipe.getUserId());
-        recipeMap.put("timestamp", recipe.getTimestamp());
-        
-        // Add lists
-        recipeMap.put("ingredients", recipe.getIngredients());
-        recipeMap.put("steps", recipe.getSteps());
+        // Get user image (Base64) from current user profile if available
+        String userImageBase64 = null;
+        if (currentUser.getPhotoUrl() != null) {
+            userImageBase64 = currentUser.getPhotoUrl().toString();
+        }
 
-        db.collection("recipes")
-                .add(recipeMap)
+        Recipe recipe = new Recipe();
+        recipe.setStrMeal(recipeName);
+        recipe.setIngredients(ingredientsList);
+        recipe.setIngredientsString(ingredientsString);
+        recipe.setStrInstructions(instructions);
+        recipe.setUserId(userId);
+        recipe.setUserName(userName);
+        recipe.setUserImage(userImageBase64);
+        recipe.setTimestamp(System.currentTimeMillis());
+        recipe.setStrMealThumb(imageBase64);
+
+        db.collection("recipes").add(recipe)
                 .addOnSuccessListener(documentReference -> {
-                    Snackbar.make(requireView(), R.string.recipe_added_success, Snackbar.LENGTH_SHORT).show();
-                    navigateBack();
+                    // Update the recipe with its generated ID
+                    String recipeId = documentReference.getId();
+                    documentReference.update("id", recipeId)
+                            .addOnSuccessListener(aVoid -> {
+                                showLoading(false);
+                                Snackbar.make(rootView, R.string.recipe_added_successfully, Snackbar.LENGTH_SHORT).show();
+                                navigateBack();
+                            })
+                            .addOnFailureListener(e -> {
+                                showLoading(false);
+                                handleError(e, R.string.error_adding_recipe);
+                            });
                 })
-                .addOnFailureListener(e -> handleError(e, R.string.error_adding_recipe))
-                .addOnCompleteListener(task -> showLoading(false));
+                .addOnFailureListener(e -> {
+                    showLoading(false);
+                    handleError(e, R.string.error_adding_recipe);
+                });
     }
 
     private void handleError(Exception e, int messageResId) {
-        Log.e(TAG, "Error: ", e);
-        if (isAdded()) {
-            showLoading(false);
-            submitButton.setEnabled(true);
-            Snackbar.make(requireView(), messageResId, Snackbar.LENGTH_SHORT).show();
+        showLoading(false);
+        if (isAdded() && getContext() != null) {
+            Snackbar.make(requireView(), messageResId, Snackbar.LENGTH_LONG).show();
+            Log.e(TAG, "Error: ", e);
         }
     }
 
@@ -390,5 +317,14 @@ public class AddRecipeFragment extends Fragment {
             selectedImageBitmap.recycle();
             selectedImageBitmap = null;
         }
+        // Nullify views to prevent memory leaks
+        recipeNameInput = null;
+        ingredientsInput = null;
+        instructionsInput = null;
+        submitButton = null;
+        addPhotoButton = null;
+        recipeImage = null;
+        progressBar = null;
+        rootView = null;
     }
 } 

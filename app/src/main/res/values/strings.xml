@@ -34,6 +34,8 @@
     <string name="popular_recipes">Popular Recipes</string>
     <string name="no_recipes_found">No recipes found</string>
     <string name="no_recipes_available">No recipes available</string>
+    <string name="no_api_recipes_found">No recipes found from Google API</string>
+    <string name="no_local_recipes_found">No local recipes available</string>
     <string name="recipe_id_not_available">Recipe ID not available</string>
     <string name="no_uploaded_recipes">You haven\'t uploaded any recipes yet</string>
 
@@ -202,10 +204,14 @@
     <string name="user_image">User Image</string>
     <!-- Chat list title -->
     <string name="title_chat_list">Chats</string>
-    <string name="cannot_chat_with_self">You can’t chat with yourself</string>
+    <string name="cannot_chat_with_self">You can\'t chat with yourself</string>
 
     <!-- Toast when chat open fails -->
     <string name="error_open_chat">Could not open chat. Please try again.</string>
     <string name="read_receipt">Read</string>
+
+    <!-- New string resources for recipe upload -->
+    <string name="error_image_required">Please select an image for the recipe</string>
+    <string name="recipe_added_successfully">Recipe added successfully!</string>
 
 </resources>

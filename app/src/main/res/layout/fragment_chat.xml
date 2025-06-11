@@ -59,16 +59,17 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="@string/type_message"
+            android:maxLines="4"
             android:minLines="1"
-            android:maxLines="4" />
+            android:backgroundTint="@color/primary_color"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSend"
-            style="@style/Widget.Material3.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minWidth="64dp"
-            android:text="@string/send" />
+            android:text="@string/send"
+            style="@style/Widget.Material3.Button"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

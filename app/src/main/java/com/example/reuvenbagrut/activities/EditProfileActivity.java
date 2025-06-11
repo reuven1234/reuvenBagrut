@@ -1,7 +1,10 @@
 package com.example.reuvenbagrut.activities;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -14,14 +17,15 @@ import com.example.reuvenbagrut.databinding.ActivityEditProfileBinding;
 import com.example.reuvenbagrut.models.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class EditProfileActivity extends AppCompatActivity {
     private ActivityEditProfileBinding binding;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private FirebaseStorage storage;
     private Uri selectedImageUri;
     private ActivityResultLauncher<String> imagePickerLauncher;
 
@@ -33,7 +37,6 @@ public class EditProfileActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-        storage = FirebaseStorage.getInstance();
 
         setupToolbar();
         setupImagePicker();
@@ -75,11 +78,19 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (user != null) {
                     binding.usernameInput.setText(user.getDisplayName());
                     binding.bioInput.setText(user.getBio());
-                    if (user.getPhotoUrl() != null) {
-                        Glide.with(this)
-                            .load(user.getPhotoUrl())
-                            .circleCrop()
-                            .into(binding.profileImage);
+                    String profileImageUrl = user.getPhotoUrl();
+                    if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                        try {
+                            byte[] decodedString = Base64.decode(profileImageUrl, Base64.DEFAULT);
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                            Glide.with(this)
+                                .load(decodedByte)
+                                .circleCrop()
+                                .into(binding.profileImage);
+                        } catch (IllegalArgumentException e) {
+                            // Handle invalid Base64 string if necessary
+                            e.printStackTrace();
+                        }
                     }
                 }
             });
@@ -99,27 +110,25 @@ public class EditProfileActivity extends AppCompatActivity {
             binding.progressBar.setVisibility(View.VISIBLE);
 
             if (selectedImageUri != null) {
-                uploadImageAndSaveProfile(username, bio);
+                try {
+                    InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
+                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 75, outputStream);
+                    byte[] byteArray = outputStream.toByteArray();
+                    String base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                    saveProfile(username, bio, base64Image);
+                    if (inputStream != null) inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, R.string.error_uploading_image, Toast.LENGTH_SHORT).show();
+                    binding.saveButton.setEnabled(true);
+                    binding.progressBar.setVisibility(View.GONE);
+                }
             } else {
                 saveProfile(username, bio, null);
             }
         });
-    }
-
-    private void uploadImageAndSaveProfile(String username, String bio) {
-        String userId = auth.getCurrentUser().getUid();
-        StorageReference imageRef = storage.getReference()
-            .child("profile_images")
-            .child(userId + ".jpg");
-
-        imageRef.putFile(selectedImageUri)
-            .continueWithTask(task -> imageRef.getDownloadUrl())
-            .addOnSuccessListener(uri -> saveProfile(username, bio, uri.toString()))
-            .addOnFailureListener(e -> {
-                Toast.makeText(this, R.string.error_uploading_image, Toast.LENGTH_SHORT).show();
-                binding.saveButton.setEnabled(true);
-                binding.progressBar.setVisibility(View.GONE);
-            });
     }
 
     private void saveProfile(String username, String bio, String imageUrl) {

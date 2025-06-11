@@ -19,18 +19,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
+
     private MaterialButton signUpButton;
     private MaterialButton loginButton;
-    private FirebaseAuth mAuth;
-    private boolean keepSplashScreen = true;
-    private NavController navController;
+    private FirebaseAuth   mAuth;
+    private boolean        keepSplashScreen = true;
+    private NavController  navController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         SplashScreen splash = SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
 
-        // Keep splash longer
         splash.setKeepOnScreenCondition(() -> keepSplashScreen);
 
         mAuth = FirebaseAuth.getInstance();
@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         }, 1000);
     }
 
+    /* ───────── Login container (welcome screen) ───────── */
+
     private void showLoginScreen() {
         View loginContainer = findViewById(R.id.login_container);
         View navHostFragment = findViewById(R.id.nav_host_fragment);
@@ -62,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
         initializeViews();
         setupClickListeners();
     }
+
+    /* ───────── Main navigation UI ───────── */
 
     private void showNavigation() {
         View loginContainer = findViewById(R.id.login_container);
@@ -78,31 +82,29 @@ public class MainActivity extends AppCompatActivity {
     private void initializeViews() {
         signUpButton = findViewById(R.id.SignUp);
         loginButton  = findViewById(R.id.Login);
-        if (signUpButton != null) {
+        if (signUpButton != null)
             signUpButton.setBackgroundTintList(getColorStateList(R.color.primary_color));
-        }
-        if (loginButton != null) {
+        if (loginButton != null)
             loginButton.setBackgroundTintList(getColorStateList(R.color.secondary_color));
-        }
     }
 
     private void setupClickListeners() {
-        if (signUpButton != null) {
+        if (signUpButton != null)
             signUpButton.setOnClickListener(v -> startActivity(new Intent(this, SignUp.class)));
-        }
-        if (loginButton != null) {
+        if (loginButton != null)
             loginButton.setOnClickListener(v -> startActivity(new Intent(this, Login.class)));
-        }
     }
 
     private void setupNavigation() {
         BottomNavigationView navView = findViewById(R.id.nav_view);
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment);
+        NavHostFragment navHostFragment =
+                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
             NavigationUI.setupWithNavController(navView, navController);
 
+            /* Custom handling only for items that need special logic */
             navView.setOnItemSelectedListener(item -> {
                 int id = item.getItemId();
                 if (id == R.id.navigation_home) {
@@ -110,7 +112,8 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.navigation_add_recipe) {
                     navController.navigate(R.id.navigation_add_recipe);
                 } else if (id == R.id.navigation_chat) {
-                    startActivity(new Intent(this, com.example.reuvenbagrut.activities.ChatListActivity.class));
+                    /* ← NEW: navigate to ChatListFragment inside MainActivity */
+                    navController.navigate(R.id.navigation_chat);   // destination in nav_graph.xml
                 } else if (id == R.id.navigation_profile) {
                     navController.navigate(R.id.navigation_profile);
                 } else if (id == R.id.navigation_settings) {
@@ -126,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // If user got signed in during welcome flow
         if (mAuth.getCurrentUser() != null && !keepSplashScreen) {
             showNavigation();
         }

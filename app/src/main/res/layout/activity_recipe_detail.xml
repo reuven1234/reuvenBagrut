@@ -20,7 +20,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:titleEnabled="true"
+            app:expandedTitleGravity="bottom|center_horizontal">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
@@ -29,6 +31,7 @@
                 android:background="@color/white"
                 app:layout_collapseMode="pin"
                 app:navigationIcon="@drawable/ic_back"
+                app:title=""
                 app:titleTextColor="@color/black"/>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>

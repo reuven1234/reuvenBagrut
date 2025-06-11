@@ -20,11 +20,11 @@ import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.example.reuvenbagrut.activities.RecipeDetailActivity;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,45 +104,69 @@ public class LikedRecipesFragment extends Fragment {
             showLoading(false);
             return;
         }
+        Log.d("LikedRecipesDebug", "Loading liked recipes for user: " + userId);
 
         db.collection("users")
-          .document(userId)
-          .collection("liked_recipes")
-          .orderBy("timestamp", Query.Direction.DESCENDING)
-          .get()
-          .addOnCompleteListener(task -> {
-              if (task.isSuccessful() && isAdded()) {
-                  List<Recipe> likedRecipes = new ArrayList<>();
-                  
-                  for (QueryDocumentSnapshot document : task.getResult()) {
-                      try {
-                          Recipe recipe = new Recipe();
-                          recipe.setId(document.getString("recipeId"));
-                          recipe.setStrMeal(document.getString("title"));
-                          recipe.setStrMealThumb(document.getString("imageUrl"));
-                          recipe.setStrCategory(document.getString("category"));
-                          if (document.getTimestamp("timestamp") != null) {
-                              recipe.setTimestamp(document.getTimestamp("timestamp").toDate().getTime());
-                          }
-                          likedRecipes.add(recipe);
-                      } catch (Exception e) {
-                          Log.e("LikedRecipesFragment", "Error parsing recipe", e);
-                      }
-                  }
-                  
-                  updateRecipeList(likedRecipes);
-                  showLoading(false);
-              } else if (isAdded()) {
-                  showError(getString(R.string.error_loading_recipes));
-                  showLoading(false);
-              }
-          })
-          .addOnFailureListener(e -> {
-              if (isAdded()) {
-                  showError(getString(R.string.error_loading_recipes));
-                  showLoading(false);
-              }
-          });
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    com.example.reuvenbagrut.models.User user = documentSnapshot.toObject(com.example.reuvenbagrut.models.User.class);
+                    if (user != null && user.getLikedRecipes() != null && !user.getLikedRecipes().isEmpty()) {
+                        List<String> likedRecipeIds = user.getLikedRecipes();
+                        Log.d("LikedRecipesDebug", "Fetched liked recipe IDs: " + likedRecipeIds.size() + " IDs: " + likedRecipeIds);
+
+                        final List<Recipe> fetchedRecipes = new ArrayList<>();
+                        final int[] completedFetches = {0};
+                        final int totalFetches = likedRecipeIds.size();
+
+                        if (totalFetches == 0) {
+                            Log.d("LikedRecipesDebug", "No liked recipe IDs to fetch.");
+                            updateRecipeList(new ArrayList<>());
+                            showLoading(false);
+                            return;
+                        }
+
+                        for (String recipeId : likedRecipeIds) {
+                            db.collection("recipes").document(recipeId).get()
+                                    .addOnSuccessListener(doc -> {
+                                        if (doc.exists()) {
+                                            Recipe recipe = doc.toObject(Recipe.class);
+                                            if (recipe != null) {
+                                                recipe.setId(doc.getId());
+                                                fetchedRecipes.add(recipe);
+                                            }
+                                        }
+                                        completedFetches[0]++;
+                                        if (completedFetches[0] == totalFetches) {
+                                            Log.d("LikedRecipesDebug", "Fetched " + fetchedRecipes.size() + " actual liked recipes.");
+                                            updateRecipeList(fetchedRecipes);
+                                            showLoading(false);
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("LikedRecipesFragment", "Error fetching individual recipe: " + recipeId, e);
+                                        completedFetches[0]++;
+                                        if (completedFetches[0] == totalFetches) {
+                                            Log.d("LikedRecipesDebug", "Finished fetching with errors. Fetched " + fetchedRecipes.size() + " recipes.");
+                                            updateRecipeList(fetchedRecipes);
+                                            showLoading(false);
+                                        }
+                                    });
+                        }
+
+                    } else {
+                        // No liked recipes or user not found
+                        Log.d("LikedRecipesDebug", "User has no liked recipes or user document not found.");
+                        updateRecipeList(new ArrayList<>());
+                        showLoading(false);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (isAdded()) {
+                        showError(getString(R.string.error_loading_recipes));
+                        showLoading(false);
+                    }
+                });
     }
 
     private void updateRecipeList(List<Recipe> recipes) {

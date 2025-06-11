@@ -5,6 +5,7 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/navigation_home">
 
+    <!-- Home -->
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.reuvenbagrut.HomeFragment"
@@ -13,11 +14,9 @@
         <action
             android:id="@+id/action_home_to_recipe_detail"
             app:destination="@id/navigation_recipe_detail" />
-        <action
-            android:id="@+id/action_home_to_search"
-            app:destination="@id/navigation_search" />
     </fragment>
 
+    <!-- Favorites -->
     <fragment
         android:id="@+id/navigation_favorites"
         android:name="com.example.reuvenbagrut.LikedRecipesFragment"
@@ -28,53 +27,31 @@
             app:destination="@id/navigation_recipe_detail" />
     </fragment>
 
+    <!-- Profile -->
     <fragment
         android:id="@+id/navigation_profile"
         android:name="com.example.reuvenbagrut.ProfileFragment"
         android:label="@string/profile"
-        tools:layout="@layout/fragment_profile">
-        <action
-            android:id="@+id/action_profile_to_edit_profile"
-            app:destination="@id/navigation_edit_profile" />
-        <action
-            android:id="@+id/action_profile_to_user_profile"
-            app:destination="@id/navigation_user_profile" />
-    </fragment>
+        tools:layout="@layout/fragment_profile" />
 
+    <!-- Settings -->
     <fragment
         android:id="@+id/navigation_settings"
         android:name="com.example.reuvenbagrut.SettingsFragment"
         android:label="@string/settings"
         tools:layout="@layout/fragment_settings" />
 
+    <!-- Chat list (NEW) -->
+    <fragment
+        android:id="@+id/navigation_chat"
+        android:name="com.example.reuvenbagrut.fragments.ChatListFragment"
+        android:label="@string/title_chat_list"
+        tools:layout="@layout/fragment_chat_list" />
+
+
+    <!-- Recipe detail as separate activity -->
     <activity
         android:id="@+id/navigation_recipe_detail"
         android:name="com.example.reuvenbagrut.RecipeDetailActivity"
-        android:label="@string/recipe_details"
-        tools:layout="@layout/activity_recipe_detail" />
-
-    <activity
-        android:id="@+id/navigation_search"
-        android:name="com.example.reuvenbagrut.SearchActivity"
-        android:label="@string/search_recipes"
-        tools:layout="@layout/activity_search" />
-
-    <activity
-        android:id="@+id/navigation_edit_profile"
-        android:name="com.example.reuvenbagrut.EditProfileActivity"
-        android:label="@string/edit_profile"
-        tools:layout="@layout/activity_edit_profile" />
-
-    <activity
-        android:id="@+id/navigation_user_profile"
-        android:name="com.example.reuvenbagrut.activities.UserProfileActivity"
-        android:label="@string/user_profile"
-        tools:layout="@layout/activity_user_profile" />
-
-    <activity
-        android:id="@+id/navigation_settings"
-        android:name="com.example.reuvenbagrut.activities.SettingsActivity"
-        android:label="@string/settings"
-        tools:layout="@layout/activity_settings" />
-
-</navigation> 
+        android:label="@string/recipe_details" />
+</navigation>

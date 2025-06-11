@@ -53,60 +53,6 @@
                     app:iconifiedByDefault="false"
                     app:queryHint="@string/search_recipes_hint"/>
 
-                <!-- Categories -->
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:clipToPadding="false"
-                    android:scrollbars="none">
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/categoryChipGroup"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="true"
-                        app:singleLine="true">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipAll"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="All"
-                            style="@style/Widget.Material3.Chip.Filter"/>
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipBreakfast"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Breakfast"
-                            style="@style/Widget.Material3.Chip.Filter"/>
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipLunch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Lunch"
-                            style="@style/Widget.Material3.Chip.Filter"/>
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipDinner"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dinner"
-                            style="@style/Widget.Material3.Chip.Filter"/>
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipDessert"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dessert"
-                            style="@style/Widget.Material3.Chip.Filter"/>
-
-                    </com.google.android.material.chip.ChipGroup>
-                </HorizontalScrollView>
-
                 <!-- Popular Recipes Section -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -144,38 +90,38 @@
                     </LinearLayout>
                 </com.facebook.shimmer.ShimmerFrameLayout>
 
-                <!-- Recipe List -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/popularRecipesRecyclerView"
-                    android:layout_width="match_parent"
+                    <!-- Recipe List -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/popularRecipesRecyclerView"
+                        android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:clipToPadding="false"
+                        android:clipToPadding="false"
                     android:padding="16dp"
-                    android:visibility="visible"
-                    tools:listitem="@layout/item_recipe"/>
+                        android:visibility="visible"
+                        tools:listitem="@layout/item_recipe"/>
 
-                <!-- Empty State -->
-                <TextView
-                    android:id="@+id/emptyStateText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    <!-- Empty State -->
+                    <TextView
+                        android:id="@+id/emptyStateText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="@string/no_recipes_found"
-                    android:textAppearance="@style/TextAppearance.FoodPal.Body1"
-                    android:textColor="@color/text_secondary"
-                    android:visibility="gone"/>
+                        android:gravity="center"
+                        android:text="@string/no_recipes_found"
+                        android:textAppearance="@style/TextAppearance.FoodPal.Body1"
+                        android:textColor="@color/text_secondary"
+                        android:visibility="gone"/>
 
-                <!-- Progress Bar -->
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:visibility="gone"/>
+                    <!-- Progress Bar -->
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone"/>
 
-            </FrameLayout>
+                </FrameLayout>
 
-        </LinearLayout>
+            </LinearLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

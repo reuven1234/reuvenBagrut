@@ -2,6 +2,7 @@ package com.example.reuvenbagrut.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -66,6 +67,9 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
         recipeId     = recipeObj.getId();
         recipeUserId = recipeObj.getUserId();
+
+        Log.d("RecipeDetailActivity", "Recipe object received: " + recipeObj.getStrMeal());
+        Log.d("RecipeDetailActivity", "Recipe ingredients: " + recipeObj.getIngredients());
 
         bindRecipe();
         db          = FirebaseFirestore.getInstance();
@@ -140,12 +144,27 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
         favoriteButton.setOnClickListener(v -> {
             boolean liked = recipeObj.isLikedByUser(uid);
+
+            // 1. Update the recipe document (likedBy array)
             db.collection("recipes").document(recipeId)
                     .update("likedBy",
                             liked ? FieldValue.arrayRemove(uid)
                                     : FieldValue.arrayUnion(uid))
                     .addOnSuccessListener(a -> {
-                        if (liked) recipeObj.removeLike(uid); else recipeObj.addLike(uid);
+                        Log.d("RecipeDetailActivity", "Recipe likedBy updated successfully.");
+                        if (liked) {
+                            recipeObj.removeLike(uid);
+                            // 2. Also remove from user's likedRecipes list
+                            db.collection("users").document(uid)
+                                    .update("likedRecipes", FieldValue.arrayRemove(recipeId));
+                        } else {
+                            recipeObj.addLike(uid);
+                            // 2. Also add to user's likedRecipes list
+                            db.collection("users").document(uid)
+                                    .update("likedRecipes", FieldValue.arrayUnion(recipeId))
+                                    .addOnSuccessListener(aVoid -> Log.d("RecipeDetailActivity", "User likedRecipes updated successfully (added)."))
+                                    .addOnFailureListener(e -> Log.e("RecipeDetailActivity", "Error updating user likedRecipes (add): " + e.getMessage()));
+                        }
                         updateLikeIcon(uid);
                     })
                     .addOnFailureListener(e ->
@@ -178,23 +197,33 @@ public class RecipeDetailActivity extends AppCompatActivity {
         }
         String chatId = createChatId(myUid, otherUid);
 
-        db.collection("chats").document(chatId).get()
-                .addOnSuccessListener(doc -> {
-                    if (!doc.exists()) {
-                        HashMap<String,Object> data = new HashMap<>();
-                        data.put("participants", Arrays.asList(myUid, otherUid));
-                        data.put("lastMessage", "");
-                        data.put("lastMessageTime", 0L);
-                        data.put("otherName", recipeObj.getUserName());
-                        db.collection("chats").document(chatId).set(data);
-                    }
-                    startActivity(new Intent(this, ChatActivity.class)
-                            .putExtra("chatId",        chatId)
-                            .putExtra("otherUserId",   otherUid)          // ← מפתחות תואמים ל-ChatActivity
-                            .putExtra("otherUserName", recipeObj.getUserName()));
+        // First, get the other user's name from the 'users' collection
+        db.collection("users").document(otherUid).get()
+                .addOnSuccessListener(userDoc -> {
+                    String fetchedOtherUserName = userDoc.getString("name");
+                    final String finalOtherUserName = (fetchedOtherUserName == null || fetchedOtherUserName.trim().isEmpty())
+                                                        ? "Unknown User" : fetchedOtherUserName; // Make it effectively final here
+
+                    db.collection("chats").document(chatId).get()
+                            .addOnSuccessListener(chatDoc -> {
+                                if (!chatDoc.exists()) {
+                                    HashMap<String,Object> data = new HashMap<>();
+                                    data.put("participants", Arrays.asList(myUid, otherUid));
+                                    data.put("lastMessage", "");
+                                    data.put("lastMessageTime", 0L);
+                                    data.put("otherName", finalOtherUserName); // Use final variable
+                                    db.collection("chats").document(chatId).set(data);
+                                }
+                                startActivity(new Intent(this, ChatActivity.class)
+                                        .putExtra("chatId",        chatId)
+                                        .putExtra("otherUserId",   otherUid)
+                                        .putExtra("otherUserName", finalOtherUserName)); // Pass final variable
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(this, R.string.error_open_chat, Toast.LENGTH_SHORT).show());
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(this, R.string.error_open_chat, Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this, "Error fetching user data: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private String createChatId(String uid1, String uid2) {

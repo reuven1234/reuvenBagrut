@@ -28,7 +28,6 @@ public class ProfileFragment extends Fragment {
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
     private TextView recipesCountText;
-    private TextView bioText;
     private TextView editProfileButton;
     private TextView usernameText;
     private ShapeableImageView profileImage;
@@ -60,7 +59,6 @@ public class ProfileFragment extends Fragment {
         viewPager = view.findViewById(R.id.viewPager);
         tabLayout = view.findViewById(R.id.tabLayout);
         recipesCountText = view.findViewById(R.id.recipesCountText);
-        bioText = view.findViewById(R.id.bioText);
         editProfileButton = view.findViewById(R.id.editProfileButton);
         usernameText = view.findViewById(R.id.usernameText);
         profileImage = view.findViewById(R.id.profileImage);
@@ -97,7 +95,6 @@ public class ProfileFragment extends Fragment {
                 .addOnSuccessListener(documentSnapshot -> {
                     User user = documentSnapshot.toObject(User.class);
                     if (user != null) {
-                        bioText.setText(user.getBio());
                         usernameText.setText(user.getName());
 
                         String profileImageUrl = user.getPhotoUrl();

@@ -1,9 +1,9 @@
 package com.example.reuvenbagrut.adapters;
 
 import android.content.Context;
-// import android.graphics.Bitmap;
-// import android.graphics.BitmapFactory;
-// import android.util.Base64;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -85,12 +85,31 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
             String imageUrl = recipe.getStrMealThumb();
             Log.d("RecipeAdapter", "Loading image for recipe " + recipe.getStrMeal() + ": " + (imageUrl != null ? imageUrl.substring(0, Math.min(imageUrl.length(), 50)) + "..." : "null"));
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                Glide.with(context)
-                        .load(imageUrl)
-                        .centerCrop()
-                        .placeholder(R.drawable.ic_recipe_placeholder)
-                        .error(R.drawable.ic_recipe_placeholder)
-                        .into(recipeImage);
+                try {
+                    if (imageUrl.startsWith("data:image")) {
+                        // Handle Base64 image
+                        String base64Image = imageUrl.substring(imageUrl.indexOf(",") + 1);
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        Glide.with(context)
+                            .load(decodedByte)
+                            .centerCrop()
+                            .placeholder(R.drawable.ic_recipe_placeholder)
+                            .error(R.drawable.ic_recipe_placeholder)
+                            .into(recipeImage);
+                    } else {
+                        // Handle regular URL
+                        Glide.with(context)
+                            .load(imageUrl)
+                            .centerCrop()
+                            .placeholder(R.drawable.ic_recipe_placeholder)
+                            .error(R.drawable.ic_recipe_placeholder)
+                            .into(recipeImage);
+                    }
+                } catch (Exception e) {
+                    Log.e("RecipeAdapter", "Error loading image", e);
+                    recipeImage.setImageResource(R.drawable.ic_recipe_placeholder);
+                }
             } else {
                 recipeImage.setImageResource(R.drawable.ic_recipe_placeholder);
             }

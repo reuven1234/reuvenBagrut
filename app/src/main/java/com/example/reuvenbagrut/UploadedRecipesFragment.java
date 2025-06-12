@@ -64,7 +64,11 @@ public class UploadedRecipesFragment extends Fragment {
         emptyStateText      = view.findViewById(R.id.emptyStateText);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new RecipeAdapter(getContext(), new ArrayList<>(), null);
+        adapter = new RecipeAdapter(getContext(), new ArrayList<>(), recipe -> {
+            Intent intent = new Intent(getActivity(), RecipeDetailActivity.class);
+            intent.putExtra("recipe", recipe);
+            startActivity(intent);
+        });
         recyclerView.setAdapter(adapter);
 
         swipeRefreshLayout.setColorSchemeResources(

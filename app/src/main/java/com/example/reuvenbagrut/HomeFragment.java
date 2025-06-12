@@ -208,11 +208,11 @@ public class HomeFragment extends Fragment {
                     for (Meal meal : meals) {
                         Recipe recipe = new Recipe();
                         recipe.setId(meal.getIdMeal());
-                        recipe.setRecipeName(meal.getStrMeal());
-                        recipe.setImageUrl(meal.getStrMealThumb());
+                        recipe.setStrMeal(meal.getStrMeal());
+                        recipe.setStrMealThumb(meal.getStrMealThumb());
                         recipe.setIngredients(meal.getIngredientMeasures());
-                        recipe.setInstructions(meal.getStrInstructions());
-                        recipe.setCategory(meal.getStrCategory());
+                        recipe.setStrInstructions(meal.getStrInstructions());
+                        recipe.setStrCategory(meal.getStrCategory());
                         apiRecipes.add(recipe);
                     }
                     recipes.clear();

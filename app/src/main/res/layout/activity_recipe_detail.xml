@@ -22,7 +22,11 @@
             android:fitsSystemWindows="true"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:titleEnabled="true"
-            app:expandedTitleGravity="bottom|center_horizontal">
+            app:expandedTitleGravity="bottom|center_horizontal"
+            app:collapsedTitleGravity="center"
+            app:expandedTitleTextAppearance="@style/TextAppearance.Material3.HeadlineMedium"
+            app:collapsedTitleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
+            app:contentScrim="?attr/colorSurface">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
@@ -30,9 +34,20 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="@color/white"
                 app:layout_collapseMode="pin"
-                app:navigationIcon="@drawable/ic_back"
-                app:title=""
-                app:titleTextColor="@color/black"/>
+                app:navigationIcon="@drawable/ic_back">
+
+                <TextView
+                    android:id="@+id/toolbarTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end"/>
+
+            </com.google.android.material.appbar.MaterialToolbar>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
@@ -67,6 +82,18 @@
                     android:scaleType="centerCrop"
                     android:contentDescription="Recipe Image" />
             </androidx.cardview.widget.CardView>
+
+            <!-- Recipe Name -->
+            <TextView
+                android:id="@+id/recipeName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:layout_marginBottom="16dp"
+                android:paddingHorizontal="16dp"/>
 
             <!-- User Row -->
             <LinearLayout
@@ -104,9 +131,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="admin"
-                        android:textStyle="bold"
-                        android:textSize="11sp"
-                        android:textColor="#8448FF"
+                        android:textStyle="normal"
+                        android:textSize="12sp"
+                        android:textColor="#616161"
+                        android:fontFamily="sans-serif"
                         android:layout_marginTop="2dp"/>
                 </LinearLayout>
 
@@ -192,14 +220,19 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/commentsRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                android:clipToPadding="false"
+                android:paddingBottom="10dp"
                 android:layout_marginBottom="10dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Add a comment…">
+                android:hint="Add a comment…"
+                android:layout_marginTop="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/commentInput"

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,6 +39,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
     private CollapsingToolbarLayout collapsingToolbar;
     private MaterialToolbar         toolbar;
     private ShapeableImageView      recipeImage;
+    private TextView               recipeName;
     private MaterialTextView        recipeCategory, recipeIngredients, recipeInstructions;
     private ShapeableImageView      userProfileImage;
     private MaterialTextView        userName;
@@ -88,6 +90,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
         collapsingToolbar   = findViewById(R.id.collapsingToolbar);
         toolbar             = findViewById(R.id.toolbar);
         recipeImage         = findViewById(R.id.recipeImage);
+        recipeName          = findViewById(R.id.recipeName);
         recipeCategory      = findViewById(R.id.recipeCategory);
         recipeIngredients   = findViewById(R.id.recipeIngredients);
         recipeInstructions  = findViewById(R.id.recipeInstructions);
@@ -102,22 +105,66 @@ public class RecipeDetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
 
+        // Initialize RecyclerView
+        commentsRecyclerView.setHasFixedSize(false);  // Changed to false to allow dynamic content
+        commentsRecyclerView.setNestedScrollingEnabled(false);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setAutoMeasureEnabled(true);
+        commentsRecyclerView.setLayoutManager(layoutManager);
+        
         commentAdapter = new CommentAdapter(this, comments,
                 c -> startActivity(new Intent(this, UserProfileActivity.class)
                         .putExtra("userId", c.getUserId())));
-        commentsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         commentsRecyclerView.setAdapter(commentAdapter);
+        
+        Log.d("RecipeDetailActivity", "Views initialized, RecyclerView setup complete");
     }
 
     private void bindRecipe() {
-        collapsingToolbar.setTitle(recipeObj.getStrMeal());
+        // Set the recipe name below the photo
+        String recipeNameText = recipeObj.getStrMeal();
+        Log.d("RecipeDetailActivity", "Setting recipe name: " + recipeNameText);
+        
+        recipeName.setText(recipeNameText);
+        
         recipeCategory.setText(recipeObj.getStrCategory());
         Glide.with(this).load(recipeObj.getStrMealThumb()).into(recipeImage);
         recipeInstructions.setText(recipeObj.getStrInstructions());
 
+        // Log ingredients for debugging
+        Log.d("RecipeDetailActivity", "Ingredients array: " + Arrays.toString(recipeObj.getIngredients().toArray()));
+        Log.d("RecipeDetailActivity", "Ingredients string: " + recipeObj.getIngredientsString());
+
         StringBuilder sb = new StringBuilder();
-        for (String ing : recipeObj.getIngredients()) sb.append("• ").append(ing).append("\n");
-        recipeIngredients.setText(sb.toString().trim());
+        List<String> ingredients = recipeObj.getIngredients();
+        
+        // First try to use the ingredients list
+        if (ingredients != null && !ingredients.isEmpty()) {
+            for (String ing : ingredients) {
+                if (ing != null && !ing.trim().isEmpty()) {
+                    sb.append("• ").append(ing.trim()).append("\n");
+                }
+            }
+        }
+        
+        // If no ingredients in list, try to use ingredientsString
+        if (sb.length() == 0 && recipeObj.getIngredientsString() != null && !recipeObj.getIngredientsString().trim().isEmpty()) {
+            String[] ingredientsArray = recipeObj.getIngredientsString().split(",");
+            for (String ing : ingredientsArray) {
+                if (ing != null && !ing.trim().isEmpty()) {
+                    sb.append("• ").append(ing.trim()).append("\n");
+                }
+            }
+        }
+        
+        // If still no ingredients, show message
+        if (sb.length() == 0) {
+            sb.append("No ingredients listed");
+        }
+        
+        String ingredientsText = sb.toString().trim();
+        Log.d("RecipeDetailActivity", "Formatted ingredients text: " + ingredientsText);
+        recipeIngredients.setText(ingredientsText);
 
         userName.setText(recipeObj.getUserName());
         Glide.with(this).load(recipeObj.getUserImage()).circleCrop().into(userProfileImage);
@@ -244,35 +291,66 @@ public class RecipeDetailActivity extends AppCompatActivity {
         String txt = commentInput.getText().toString().trim();
         if (txt.isEmpty() || currentUser == null) return;
 
-        Comment c = new Comment(
-                recipeId,
-                currentUser.getUid(),
-                currentUser.getDisplayName(),
-                currentUser.getPhotoUrl() != null
-                        ? currentUser.getPhotoUrl().toString()
-                        : null,
-                txt,
-                String.valueOf(System.currentTimeMillis())
-        );
-
-        commentInput.setText("");
-
+        // Create a new document reference to get the ID
         db.collection("recipes").document(recipeId)
-                .collection("comments").add(c);
+                .collection("comments").add(new Comment(
+                        null, // ID will be set by Firestore
+                        recipeId,
+                        currentUser.getUid(),
+                        currentUser.getDisplayName(),
+                        currentUser.getPhotoUrl() != null
+                                ? currentUser.getPhotoUrl().toString()
+                                : null,
+                        txt))
+                .addOnSuccessListener(documentReference -> {
+                    // Update the comment with its document ID
+                    documentReference.update("id", documentReference.getId())
+                            .addOnSuccessListener(aVoid -> {
+                                commentInput.setText("");
+                                Toast.makeText(this, "Comment posted successfully", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Failed to update comment ID: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Log.e("RecipeDetailActivity", "Error updating comment ID", e);
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to post comment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("RecipeDetailActivity", "Error posting comment", e);
+                });
     }
 
     private void loadComments() {
+        Log.d("RecipeDetailActivity", "Starting to load comments for recipe: " + recipeId);
         db.collection("recipes").document(recipeId)
                 .collection("comments")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .addSnapshotListener((snap, err) -> {
-                    if (err != null || snap == null) return;
+                    if (err != null) {
+                        Log.e("RecipeDetailActivity", "Error loading comments: " + err.getMessage());
+                        Toast.makeText(this, "Error loading comments: " + err.getMessage(), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (snap == null) {
+                        Log.e("RecipeDetailActivity", "Snapshot is null");
+                        return;
+                    }
+                    
+                    Log.d("RecipeDetailActivity", "Received " + snap.getDocuments().size() + " comments");
                     comments.clear();
                     for (DocumentSnapshot d : snap.getDocuments()) {
                         Comment c = d.toObject(Comment.class);
-                        if (c != null) comments.add(c);
+                        if (c != null) {
+                            // Set the ID from the document
+                            c.setId(d.getId());
+                            comments.add(c);
+                            Log.d("RecipeDetailActivity", "Added comment: " + c.getContent());
+                        } else {
+                            Log.e("RecipeDetailActivity", "Failed to convert document to Comment object");
+                        }
                     }
                     commentAdapter.notifyDataSetChanged();
+                    Log.d("RecipeDetailActivity", "Comments list size: " + comments.size());
                 });
     }
 }

@@ -217,11 +217,6 @@ public class AddRecipeFragment extends Fragment {
             return;
         }
 
-        if (selectedImageBitmap == null) {
-            Snackbar.make(requireView(), R.string.error_image_required, Snackbar.LENGTH_SHORT).show();
-            return;
-        }
-
         showLoading(true);
 
         // Convert bitmap to Base64 string
@@ -234,10 +229,10 @@ public class AddRecipeFragment extends Fragment {
             Log.d(TAG, "Generated Base64 image string: " + imageBase64.substring(0, Math.min(imageBase64.length(), 100)) + "..."); // Log first 100 chars
         }
 
-        saveRecipe(recipeName, ingredientsString, instructions, imageBase64);
+        saveRecipe(recipeName, ingredientsString, instructions, imageBase64, ingredientsList);
     }
 
-    private void saveRecipe(String recipeName, String ingredientsString, String instructions, String imageBase64) {
+    private void saveRecipe(String recipeName, String ingredientsString, String instructions, String imageBase64, List<String> ingredientsList) {
         String userId = currentUser.getUid();
         String userName = currentUser.getDisplayName(); // Assuming display name is set on user
 

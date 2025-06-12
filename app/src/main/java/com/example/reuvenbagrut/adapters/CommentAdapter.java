@@ -46,10 +46,16 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         holder.commentText.setText(comment.getContent());
         holder.timeText.setText(formatTime(comment.getTimestamp()));
 
-        if (comment.getUserImage() != null && !comment.getUserImage().isEmpty()) {
+        // Set default profile image
+        holder.profileImage.setImageResource(R.drawable.ic_profile);
+
+        // Only try to load user image if it's a valid URL
+        if (comment.getUserImage() != null && !comment.getUserImage().isEmpty() && 
+            (comment.getUserImage().startsWith("http://") || comment.getUserImage().startsWith("https://"))) {
             Glide.with(context)
                 .load(comment.getUserImage())
                 .circleCrop()
+                .error(R.drawable.ic_profile)  // Set error image
                 .into(holder.profileImage);
         }
 

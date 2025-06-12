@@ -191,6 +191,11 @@ public class Recipe implements Parcelable {
     }
 
     @PropertyName("ingredientsString")
+    public String getIngredientsString() {
+        return ingredientsString;
+    }
+
+    @PropertyName("ingredientsString")
     public void setIngredientsString(String ingredientsString) {
         this.ingredientsString = ingredientsString;
     }
